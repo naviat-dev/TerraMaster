@@ -1,8 +1,4 @@
-D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.exe
-D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.deps.json
-D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.runtimeconfig.json
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.dll
-D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.pdb
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\Avalonia.Base.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\Avalonia.Controls.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\Avalonia.DesignerSupport.dll
@@ -31,6 +27,12 @@ D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\HarfBuzzSharp.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\MicroCom.Runtime.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\SkiaSharp.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\Tmds.DBus.Protocol.dll
+D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x64\native\libHarfBuzzSharp.dll
+D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x64\native\libSkiaSharp.dll
+D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.exe
+D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.deps.json
+D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.runtimeconfig.json
+D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\TerraMaster.pdb
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-arm64\native\av_libglesv2.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x64\native\av_libglesv2.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x86\native\av_libglesv2.dll
@@ -41,7 +43,6 @@ D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\linux-musl-x64\nat
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\linux-x64\native\libHarfBuzzSharp.so
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\osx\native\libHarfBuzzSharp.dylib
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-arm64\native\libHarfBuzzSharp.dll
-D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x64\native\libHarfBuzzSharp.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x86\native\libHarfBuzzSharp.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\linux-arm\native\libSkiaSharp.so
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\linux-arm64\native\libSkiaSharp.so
@@ -49,7 +50,6 @@ D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\linux-musl-x64\nat
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\linux-x64\native\libSkiaSharp.so
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\osx\native\libSkiaSharp.dylib
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-arm64\native\libSkiaSharp.dll
-D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x64\native\libSkiaSharp.dll
 D:\Aviation\TerraMaster\TerraMaster\bin\Debug\net9.0\runtimes\win-x86\native\libSkiaSharp.dll
 D:\Aviation\TerraMaster\TerraMaster\obj\Debug\net9.0\TerraMaster.csproj.AssemblyReference.cache
 D:\Aviation\TerraMaster\TerraMaster\obj\Debug\net9.0\Avalonia\Resources.Inputs.cache
