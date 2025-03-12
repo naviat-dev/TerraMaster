@@ -1,12 +1,21 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace TerraMaster;
 
 public partial class App : Application
 {
-    double[,] LAT_INDEX = {{89, 12}, {86, 4}, {83, 2}, {76, 1}, {62,  0.5}, {22,  0.25}, {0, 0.125}};
+    static double[,] LAT_INDEX = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
+    string SAVE_PATH = "E:/testing/";
+    string SERVER_URL = "https://terramaster.flightgear.org/terrasync/";
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
