@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TerraMaster")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8cb4284d2bb2eb089c25ecc3040729b83cd2bd34")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b4491ffe73eebe325f286086b7357b7842bffe3d")]
 [assembly: System.Reflection.AssemblyProductAttribute("TerraMaster")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TerraMaster")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
