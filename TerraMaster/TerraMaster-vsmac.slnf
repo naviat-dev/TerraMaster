@@ -1,0 +1,9 @@
+{
+  "solution": {
+    "path": "TerraMaster.sln",
+    "projects": [
+      "TerraMaster\\TerraMaster.csproj",
+      "TerraMaster.Skia.Gtk\\TerraMaster.Skia.Gtk.csproj"
+    ]
+  }
+}
