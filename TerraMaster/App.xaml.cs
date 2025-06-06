@@ -603,7 +603,7 @@ public partial class App : Application
 				ProcessStartInfo startInfo = new()
 				{
 					FileName = "texconv.exe",
-					Arguments = "-f DXT5 -o \"" + SavePath + "Orthophotos/" + subfolder + "\" -w " + size + " -h " + size + " -y \"" + tile + ".jpg\"",
+					Arguments = "-f DXT5 -o \"" + SavePath + "Orthophotos/" + subfolder + "\" -w " + size + " -h " + size + " -y \"" + TempPath + tile + ".jpg\"",
 					RedirectStandardOutput = true,
 					UseShellExecute = false,
 					CreateNoWindow = true
