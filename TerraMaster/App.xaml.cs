@@ -66,7 +66,7 @@ public partial class App : Application
 		// Ensure the current window is active
 		MainWindow.Activate();
 
-		TMStart();		
+		TMStart();
 	}
 
 	/// <summary>
@@ -81,27 +81,44 @@ public partial class App : Application
 
 	static void TMStart()
 	{
+		TempPath = Path.GetTempPath();
+		Console.WriteLine(TempPath);
 		// Request airport index and parse into dictionary
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
 		using (HttpClient client = new(handler))
 		{
-			Console.WriteLine("Downloading airport index...");
-			string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
-			foreach (string airport in airports)
+			try
 			{
-				if (airport == "") continue;
-				string[] airportInfo = airport.Split("|");
-				Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
+				Console.WriteLine("Downloading airport index...");
+				string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
+				foreach (string airport in airports)
+				{
+					if (airport == "") continue;
+					string[] airportInfo = airport.Split("|");
+					Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
+				}
+				Console.WriteLine("Done.");
+			}
+			catch (Exception ex)
+			{
+				if (ex is AggregateException aggEx && aggEx.InnerException is HttpRequestException httpEx)
+				{
+					Console.WriteLine($"Error downloading airport index: {httpEx.StatusCode} - {httpEx.Message}");
+				}
+				else
+				{
+					Console.WriteLine($"Error downloading airport index: {ex.Message}");
+				}
+				// Consider whether the application should continue without airport data
 			}
 		}
-		Console.WriteLine("Done.");
 		Console.WriteLine("Reading scenery metadata...");
 		if (File.Exists(SavePath))
 		{
 		}
 
-		_ = DownloadPlan("C:\\Users\\King\\Downloads\\YPDN-YSSY.fgfp", 30);
+		_ = DownloadPlan("C:\\Users\\King\\Downloads\\KSEA-CYVR.fgfp", 30);
 	}
 
 	/// <summary>
