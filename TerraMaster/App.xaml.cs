@@ -9,109 +9,115 @@ namespace TerraMaster;
 
 public partial class App : Application
 {
-    static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
-    static string SavePath = "E:/testing/";
-    static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
-    static readonly Dictionary<string, double[]> Airports = [];
-    static int OrthoRes = 2048;
-    static bool InternetConnected = false;
-    static HashSet<string> CurrentTasks = [];
-    static SemaphoreSlim taskQueue = new SemaphoreSlim(20);
-    static Dictionary<string, string[]> TerrainRecords = [];
-    static Dictionary<string, string[]> OrthoRecords = [];
-    /// <summary>
-    /// Initializes the singleton application object. This is the first line of authored code
-    /// executed, and as such is the logical equivalent of main() or WinMain().
-    /// </summary>
-    public App()
-    {
-        this.InitializeComponent();
-    }
+	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
+	static string SavePath = "E:/testing/";
+	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
+	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/"];
 
-    protected Window? MainWindow { get; private set; }
+	static readonly Dictionary<string, double[]> Airports = [];
+	static int OrthoRes = 2048;
+	static bool InternetConnected = false;
+	static HashSet<string> CurrentTasks = [];
+	static SemaphoreSlim taskQueue = new(20);
+	static Dictionary<string, string[]> TerrainRecords = [];
+	static Dictionary<string, string[]> OrthoRecords = [];
+	/// <summary>
+	/// Initializes the singleton application object. This is the first line of authored code
+	/// executed, and as such is the logical equivalent of main() or WinMain().
+	/// </summary>
+	public App()
+	{
+		this.InitializeComponent();
+	}
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
-    {
-        MainWindow = new Window();
+	protected Window? MainWindow { get; private set; }
+
+	protected override void OnLaunched(LaunchActivatedEventArgs args)
+	{
+		MainWindow = new Window();
 #if DEBUG
-        MainWindow.UseStudio();
+		MainWindow.UseStudio();
 #endif
 
 
-        // Do not repeat app initialization when the Window already has content,
-        // just ensure that the window is active
-        if (MainWindow.Content is not Frame rootFrame)
-        {
-            // Create a Frame to act as the navigation context and navigate to the first page
-            rootFrame = new Frame();
+		// Do not repeat app initialization when the Window already has content,
+		// just ensure that the window is active
+		if (MainWindow.Content is not Frame rootFrame)
+		{
+			// Create a Frame to act as the navigation context and navigate to the first page
+			rootFrame = new Frame();
 
-            // Place the frame in the current Window
-            MainWindow.Content = rootFrame;
+			// Place the frame in the current Window
+			MainWindow.Content = rootFrame;
 
-            rootFrame.NavigationFailed += OnNavigationFailed;
-        }
+			rootFrame.NavigationFailed += OnNavigationFailed;
+		}
 
-        if (rootFrame.Content == null)
-        {
-            // When the navigation stack isn't restored navigate to the first page,
-            // configuring the new page by passing required information as a navigation
-            // parameter
-            rootFrame.Navigate(typeof(MainPage), args.Arguments);
-        }
+		if (rootFrame.Content == null)
+		{
+			// When the navigation stack isn't restored navigate to the first page,
+			// configuring the new page by passing required information as a navigation
+			// parameter
+			rootFrame.Navigate(typeof(MainPage), args.Arguments);
+		}
 
-        MainWindow.SetWindowIcon();
-        // Ensure the current window is active
-        MainWindow.Activate();
+		MainWindow.SetWindowIcon();
+		// Ensure the current window is active
+		MainWindow.Activate();
 
-        // REAL CODE STARTS HERE
-        // Request airport index and parse into dictionary
-        HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
+		TMStart();		
+	}
 
-        using (HttpClient client = new(handler))
-        {
-            Console.WriteLine("Downloading airport index...");
-            string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
-            foreach (string airport in airports)
-            {
-                if (airport == "") continue;
-                string[] airportInfo = airport.Split("|");
-                Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
-            }
-        }
-        Console.WriteLine("Done.");
-        Console.WriteLine("Reading scenery metadata...");
-        if (File.Exists(SavePath))
-        {
-        }
+	/// <summary>
+	/// Invoked when Navigation to a certain page fails
+	/// </summary>
+	/// <param name="sender">The Frame which failed navigation</param>
+	/// <param name="e">Details about the navigation failure</param>
+	void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+	{
+		throw new InvalidOperationException($"Failed to load {e.SourcePageType.FullName}: {e.Exception}");
+	}
 
-        _ = DownloadPlan("C:\\Users\\King\\Downloads\\YPDN-YSSY.fgfp", 30);
-    }
+	static void TMStart()
+	{
+		// Request airport index and parse into dictionary
+		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
-    /// <summary>
-    /// Invoked when Navigation to a certain page fails
-    /// </summary>
-    /// <param name="sender">The Frame which failed navigation</param>
-    /// <param name="e">Details about the navigation failure</param>
-    void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
-    {
-        throw new InvalidOperationException($"Failed to load {e.SourcePageType.FullName}: {e.Exception}");
-    }
+		using (HttpClient client = new(handler))
+		{
+			Console.WriteLine("Downloading airport index...");
+			string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
+			foreach (string airport in airports)
+			{
+				if (airport == "") continue;
+				string[] airportInfo = airport.Split("|");
+				Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
+			}
+		}
+		Console.WriteLine("Done.");
+		Console.WriteLine("Reading scenery metadata...");
+		if (File.Exists(SavePath))
+		{
+		}
 
-    /// <summary>
-    /// Configures global Uno Platform logging
-    /// </summary>
-    public static void InitializeLogging()
-    {
+		_ = DownloadPlan("C:\\Users\\King\\Downloads\\YPDN-YSSY.fgfp", 30);
+	}
+
+	/// <summary>
+	/// Configures global Uno Platform logging
+	/// </summary>
+	public static void InitializeLogging()
+	{
 #if DEBUG
-        // Logging is disabled by default for release builds, as it incurs a significant
-        // initialization cost from Microsoft.Extensions.Logging setup. If startup performance
-        // is a concern for your application, keep this disabled. If you're running on the web or
-        // desktop targets, you can use URL or command line parameters to enable it.
-        //
-        // For more performance documentation: https://platform.uno/docs/articles/Uno-UI-Performance.html
+		// Logging is disabled by default for release builds, as it incurs a significant
+		// initialization cost from Microsoft.Extensions.Logging setup. If startup performance
+		// is a concern for your application, keep this disabled. If you're running on the web or
+		// desktop targets, you can use URL or command line parameters to enable it.
+		//
+		// For more performance documentation: https://platform.uno/docs/articles/Uno-UI-Performance.html
 
-        var factory = LoggerFactory.Create(builder =>
-        {
+		var factory = LoggerFactory.Create(builder =>
+		{
 #if __WASM__
             builder.AddProvider(new global::Uno.Extensions.Logging.WebAssembly.WebAssemblyConsoleLoggerProvider());
 #elif __IOS__
@@ -120,54 +126,54 @@ public partial class App : Application
             // Log to the Visual Studio Debug console
             builder.AddConsole();
 #else
-            builder.AddConsole();
+			builder.AddConsole();
 #endif
 
-            // Exclude logs below this level
-            builder.SetMinimumLevel(LogLevel.Information);
+			// Exclude logs below this level
+			builder.SetMinimumLevel(LogLevel.Information);
 
-            // Default filters for Uno Platform namespaces
-            builder.AddFilter("Uno", LogLevel.Warning);
-            builder.AddFilter("Windows", LogLevel.Warning);
-            builder.AddFilter("Microsoft", LogLevel.Warning);
+			// Default filters for Uno Platform namespaces
+			builder.AddFilter("Uno", LogLevel.Warning);
+			builder.AddFilter("Windows", LogLevel.Warning);
+			builder.AddFilter("Microsoft", LogLevel.Warning);
 
-            // Generic Xaml events
-            // builder.AddFilter("Microsoft.UI.Xaml", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.VisualStateGroup", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.StateTriggerBase", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.UIElement", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.FrameworkElement", LogLevel.Trace );
+			// Generic Xaml events
+			// builder.AddFilter("Microsoft.UI.Xaml", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.VisualStateGroup", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.StateTriggerBase", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.UIElement", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.FrameworkElement", LogLevel.Trace );
 
-            // Layouter specific messages
-            // builder.AddFilter("Microsoft.UI.Xaml.Controls", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.Controls.Layouter", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.Controls.Panel", LogLevel.Debug );
+			// Layouter specific messages
+			// builder.AddFilter("Microsoft.UI.Xaml.Controls", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.Controls.Layouter", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.Controls.Panel", LogLevel.Debug );
 
-            // builder.AddFilter("Windows.Storage", LogLevel.Debug );
+			// builder.AddFilter("Windows.Storage", LogLevel.Debug );
 
-            // Binding related messages
-            // builder.AddFilter("Microsoft.UI.Xaml.Data", LogLevel.Debug );
-            // builder.AddFilter("Microsoft.UI.Xaml.Data", LogLevel.Debug );
+			// Binding related messages
+			// builder.AddFilter("Microsoft.UI.Xaml.Data", LogLevel.Debug );
+			// builder.AddFilter("Microsoft.UI.Xaml.Data", LogLevel.Debug );
 
-            // Binder memory references tracking
-            // builder.AddFilter("Uno.UI.DataBinding.BinderReferenceHolder", LogLevel.Debug );
+			// Binder memory references tracking
+			// builder.AddFilter("Uno.UI.DataBinding.BinderReferenceHolder", LogLevel.Debug );
 
-            // DevServer and HotReload related
-            // builder.AddFilter("Uno.UI.RemoteControl", LogLevel.Information);
+			// DevServer and HotReload related
+			// builder.AddFilter("Uno.UI.RemoteControl", LogLevel.Information);
 
-            // Debug JS interop
-            // builder.AddFilter("Uno.Foundation.WebAssemblyRuntime", LogLevel.Debug );
-        });
+			// Debug JS interop
+			// builder.AddFilter("Uno.Foundation.WebAssemblyRuntime", LogLevel.Debug );
+		});
 
-        global::Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
+		global::Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
 
 #if HAS_UNO
-        global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
+		global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
 #endif
 #endif
-    }
-   
-    /// <summary>
+	}
+
+	/// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
 	/// </summary>
 	/// <param name="lat">The latitude of the point</param>
@@ -338,18 +344,18 @@ public partial class App : Application
 		Console.WriteLine("Image cropped and resized successfully.");
 	}
 
-    /// <summary>
-    /// Downloads terrain, orthophoto and OpenStreetMap data related to a geographic tile at specified latitude and longitude.
-    /// </summary>
-    /// <param name="lat">The latitude of the tile's center.</param>
-    /// <param name="lon">The longitude of the tile's center.</param>
-    /// <param name="size">The size of the tile.</param>
-    /// <param name="version">The version of the data to be downloaded.</param>
-    /// <remarks>
-    /// This method downloads terrain data, orthophoto imagery, object data, and OpenStreetMap data for the specified tile.
-    /// It handles SSL certificate errors due to self-signed certificates.
-    /// </remarks>
-    static async Task DownloadTile(double lat, double lon, int size, string version)
+	/// <summary>
+	/// Downloads terrain, orthophoto and OpenStreetMap data related to a geographic tile at specified latitude and longitude.
+	/// </summary>
+	/// <param name="lat">The latitude of the tile's center.</param>
+	/// <param name="lon">The longitude of the tile's center.</param>
+	/// <param name="size">The size of the tile.</param>
+	/// <param name="version">The version of the data to be downloaded.</param>
+	/// <remarks>
+	/// This method downloads terrain data, orthophoto imagery, object data, and OpenStreetMap data for the specified tile.
+	/// It handles SSL certificate errors due to self-signed certificates.
+	/// </remarks>
+	static async Task DownloadTile(double lat, double lon, int size, string version)
 	{
 		// This has to ignore SSL certificate errors, because the server is self-signed
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
