@@ -29,6 +29,7 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="SharpCompress" />
+    <PackageReference Include="Uno.UI.Lottie" />
   </ItemGroup>
 
 </Project>
