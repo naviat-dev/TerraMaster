@@ -11,6 +11,7 @@ public partial class App : Application
 {
 	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
 	static string SavePath = "E:/testing/";
+	static string TempPath;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/"];
 
@@ -580,8 +581,8 @@ public partial class App : Application
 					_ = Directory.CreateDirectory(SavePath + "Orthophotos/" + subfolder);
 					Console.WriteLine("Creating orthophoto directories...");
 				}
-				await File.WriteAllBytesAsync(tile + ".jpg", orthoBytes);
-				ImageCrop(crop, 0, tile + ".jpg");
+				await File.WriteAllBytesAsync(TempPath + tile + ".jpg", orthoBytes);
+				ImageCrop(crop, 0, TempPath + tile + ".jpg");
 				ProcessStartInfo startInfo = new()
 				{
 					FileName = "texconv.exe",
@@ -598,7 +599,7 @@ public partial class App : Application
 					process.WaitForExit();
 					Console.WriteLine(result);
 				}
-				File.Delete(tile + ".jpg");
+				File.Delete(TempPath + tile + ".jpg");
 				_ = CurrentTasks.Remove(urlPic);
 			}
 		}
