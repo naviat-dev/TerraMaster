@@ -375,6 +375,7 @@ public partial class App : Application
 	/// </remarks>
 	static async Task DownloadTile(double lat, double lon, int size, string version)
 	{
+		await taskQueue.WaitAsync();
 		// This has to ignore SSL certificate errors, because the server is self-signed
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
@@ -394,6 +395,7 @@ public partial class App : Application
 			Console.WriteLine(ex);
 			Console.WriteLine($"Error downloading tile: {ex.Message}");
 		}
+		taskQueue.Release();
 	}
 
 	static async Task DownloadTerrain(double lat, double lon, string version)
