@@ -3,6 +3,14 @@
 	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	  xmlns:local="using:TerraMaster"
 	  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	<Page.Resources>
++		<Style x:Key="MenuButtonStyle" TargetType="Button">
++			<Setter Property="HorizontalAlignment" Value="Left"/>
++			<Setter Property="VerticalAlignment" Value="Center"/>
++			<Setter Property="Background" Value="Transparent"/>
++			<Setter Property="BorderThickness" Value="0"/>
++		</Style>
++	</Page.Resources>
 	<ScrollViewer IsTabStop="True">
 		<Grid>
 			<StackPanel
@@ -25,12 +33,9 @@
 					</Grid.ColumnDefinitions>
 					<Button
 						x:Name="tileButton"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Center"
 						Grid.Row="0"
 						Grid.Column="0"
-						Background="#00000000"
-						BorderThickness="0">
+						Style="{StaticResource MenuButtonStyle}">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/tilemap.png"
@@ -43,12 +48,9 @@
 					</Button>
 					<Button
 						x:Name="arptButton"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Center"
 						Grid.Row="0"
 						Grid.Column="1"
-						Background="#00000000"
-						BorderThickness="0">
+						Style="{StaticResource MenuButtonStyle}">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/airport.png"
@@ -61,12 +63,9 @@
 					</Button>
 					<Button
 						x:Name="planButton"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Center"
 						Grid.Row="1"
 						Grid.Column="0"
-						Background="#00000000"
-						BorderThickness="0">
+						Style="{StaticResource MenuButtonStyle}">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/flightplan.png"
@@ -79,12 +78,9 @@
 					</Button>
 					<Button
 						x:Name="fgButton"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Center"
 						Grid.Row="1"
 						Grid.Column="1"
-						Background="#00000000"
-						BorderThickness="0">
+						Style="{StaticResource MenuButtonStyle}">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/flightgear.png"
@@ -97,12 +93,9 @@
 					</Button>
 					<Button
 						x:Name="settingsButton"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Center"
 						Grid.Row="2"
 						Grid.Column="0"
-						Background="#00000000"
-						BorderThickness="0">
+						Style="{StaticResource MenuButtonStyle}">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/settings.png"
@@ -115,12 +108,9 @@
 					</Button>
 					<Button
 						x:Name="infoButton"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Center"
 						Grid.Row="2"
 						Grid.Column="1"
-						Background="#00000000"
-						BorderThickness="0">
+						Style="{StaticResource MenuButtonStyle}">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/info.png"
