@@ -166,6 +166,7 @@ public partial class App : Application
 #endif
 #endif
     }
+   
     /// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
 	/// </summary>
@@ -337,34 +338,18 @@ public partial class App : Application
 		Console.WriteLine("Image cropped and resized successfully.");
 	}
 
-	static bool VerifyLink(string url)
-	{
-		bool isValid = false;
-		try
-		{
-			using HttpClient client = new();
-			HttpResponseMessage response = client.Send(new HttpRequestMessage(HttpMethod.Head, url));
-			isValid = response.IsSuccessStatusCode;
-		}
-		catch
-		{
-			return false;
-		}
-		return isValid;
-	}
-
-	/// <summary>
-	/// Downloads terrain, orthophoto and OpenStreetMap data related to a geographic tile at specified latitude and longitude.
-	/// </summary>
-	/// <param name="lat">The latitude of the tile's center.</param>
-	/// <param name="lon">The longitude of the tile's center.</param>
-	/// <param name="size">The size of the tile.</param>
-	/// <param name="version">The version of the data to be downloaded.</param>
-	/// <remarks>
-	/// This method downloads terrain data, orthophoto imagery, object data, and OpenStreetMap data for the specified tile.
-	/// It handles SSL certificate errors due to self-signed certificates.
-	/// </remarks>
-	static async Task DownloadTile(double lat, double lon, int size, string version)
+    /// <summary>
+    /// Downloads terrain, orthophoto and OpenStreetMap data related to a geographic tile at specified latitude and longitude.
+    /// </summary>
+    /// <param name="lat">The latitude of the tile's center.</param>
+    /// <param name="lon">The longitude of the tile's center.</param>
+    /// <param name="size">The size of the tile.</param>
+    /// <param name="version">The version of the data to be downloaded.</param>
+    /// <remarks>
+    /// This method downloads terrain data, orthophoto imagery, object data, and OpenStreetMap data for the specified tile.
+    /// It handles SSL certificate errors due to self-signed certificates.
+    /// </remarks>
+    static async Task DownloadTile(double lat, double lon, int size, string version)
 	{
 		// This has to ignore SSL certificate errors, because the server is self-signed
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
@@ -569,12 +554,11 @@ public partial class App : Application
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		double[,] bbox = GetTileBoundingBox(lat, lon);
 		double[,] bboxMercator = { { 0, 0 }, { 0, 0 } };
-		// TODO: Check if this can be replaced by SphericalMercator.ToLonLat()
 		bboxMercator[0, 0] = Math.Log(Math.Tan((90.0 + bbox[0, 0]) * Math.PI / 360.0)) * 6378137;
 		bboxMercator[0, 1] = bbox[0, 1] * Math.PI * 6378137 / 180;
 		bboxMercator[1, 0] = Math.Log(Math.Tan((90.0 + bbox[1, 0]) * Math.PI / 360.0)) * 6378137;
 		bboxMercator[1, 1] = bbox[1, 1] * Math.PI * 6378137 / 180;
-		int crop = (2048 - (int)Math.Abs((bboxMercator[0, 0] - bboxMercator[1, 0]) / (bboxMercator[0, 1] - bboxMercator[1, 1]) * 2048)) / 2;
+		int crop = (OrthoRes - (int)Math.Abs((bboxMercator[0, 0] - bboxMercator[1, 0]) / (bboxMercator[0, 1] - bboxMercator[1, 1]) * OrthoRes)) / 2;
 
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 		using HttpClient client = new(handler);
