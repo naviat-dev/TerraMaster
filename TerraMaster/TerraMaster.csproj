@@ -8,7 +8,7 @@
     <!-- Display name -->
     <ApplicationTitle>TerraMaster</ApplicationTitle>
     <!-- App Identifier -->
-    <ApplicationId>com.companyname.terramaster</ApplicationId>
+    <ApplicationId>org.flightgear.terramaster</ApplicationId>
     <!-- Versions -->
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
