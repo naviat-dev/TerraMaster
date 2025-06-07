@@ -381,18 +381,51 @@ public partial class App : Application
 
 		// Main HTTP request - this is where everything important has to happen
 		using HttpClient client = new(handler);
+
 		try
 		{
-			await DownloadTerrain(lat, lon, version);
-			await DownloadOrthophoto(lat, lon, size);
-			await DownloadObjects(lat, lon, version);
+			try
+			{
+				await DownloadTerrain(lat, lon, version);
+			}
+			catch (HttpRequestException ex)
+			{
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download.");
+					taskQueue.Release();
+					return;
+				}
+				else
+				{
+					Console.WriteLine($"Error downloading terrain data: {ex.Message}");
+				}
+			}
+			await DownloadOrthophoto(lat, lon, size); // There should always be orthophoto data available when there is terrain data, so no try-catch here
+			try
+			{
+				await DownloadObjects(lat, lon, version);
+			}
+			catch (HttpRequestException ex)
+			{
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Object data not found for tile at {lat}, {lon}. Skipping object download.");
+					taskQueue.Release();
+					return;
+				}
+				else
+				{
+					Console.WriteLine($"Error downloading object data: {ex.Message}");
+				}
+			}
 			await DownloadOSM(lat, lon);
+			taskQueue.Release();
 
 			Console.WriteLine($"Download successful.");
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine(ex);
 			Console.WriteLine($"Error downloading tile: {ex.Message}");
 		}
 		taskQueue.Release();
@@ -427,8 +460,8 @@ public partial class App : Application
 				}
 				catch (HttpRequestException ex)
 				{
-					Console.WriteLine("Error downloading file(" + urlBtg + "): " + ex.Message);
 					_ = CurrentTasks.Remove(urlBtg);
+					throw; // Rethrow the exception to be caught in the main method
 				}
 			}
 
@@ -514,7 +547,8 @@ public partial class App : Application
 				}
 				catch (HttpRequestException ex)
 				{
-					Console.WriteLine("Error downloading file(" + urlStg + "): " + ex.Message);
+					_ = CurrentTasks.Remove(urlStg);
+					throw; // Rethrow the exception to be caught in the main method
 				}
 				_ = CurrentTasks.Remove(urlStg);
 			}
@@ -751,8 +785,10 @@ public partial class App : Application
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine("Error downloading file(" + urlObj + "): " + ex.Message);
+				_ = CurrentTasks.Remove(urlObj);
+				throw; // Rethrow the exception to be caught in the main method
 			}
+			_ = CurrentTasks.Remove(urlObj);
 		}
 	}
 
@@ -797,7 +833,14 @@ public partial class App : Application
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine("Error downloading file (" + urlBuildings + "): " + ex.Message);
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Buildings data not found for tile at {lat}, {lon}. Skipping buildings download.");
+				}
+				else
+				{
+					Console.WriteLine("Error downloading file (" + urlBuildings + "): " + ex.Message);
+				}
 			}
 			_ = CurrentTasks.Remove(urlBuildings);
 		}
@@ -827,9 +870,16 @@ public partial class App : Application
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine("Error downloading file (" + urlDetails + "): " + ex.Message);
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Details data not found for tile at {lat}, {lon}. Skipping details download.");
+				}
+				else
+				{
+					Console.WriteLine("Error downloading file (" + urlDetails + "): " + ex.Message);
+				}
 			}
-			_ = CurrentTasks.Remove(urlBuildings);
+			_ = CurrentTasks.Remove(urlDetails);
 		}
 		if (CurrentTasks.Add(urlPylons))
 		{
@@ -857,7 +907,14 @@ public partial class App : Application
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine("Error downloading file (" + urlPylons + "): " + ex.Message);
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Pylons data not found for tile at {lat}, {lon}. Skipping pylons download.");
+				}
+				else
+				{
+					Console.WriteLine("Error downloading file (" + urlPylons + "): " + ex.Message);
+				}
 			}
 			_ = CurrentTasks.Remove(urlPylons);
 		}
@@ -887,7 +944,14 @@ public partial class App : Application
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine("Error downloading file (" + urlRoads + "): " + ex.Message);
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Roads data not found for tile at {lat}, {lon}. Skipping roads download.");
+				}
+				else
+				{
+					Console.WriteLine("Error downloading file (" + urlRoads + "): " + ex.Message);
+				}
 			}
 			_ = CurrentTasks.Remove(urlRoads);
 		}
@@ -917,7 +981,14 @@ public partial class App : Application
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine("Error downloading file (" + urlTrees + "): " + ex.Message);
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					Console.WriteLine($"Trees data not found for tile at {lat}, {lon}. Skipping trees download.");
+				}
+				else
+				{
+					Console.WriteLine("Error downloading file (" + urlTrees + "): " + ex.Message);
+				}
 			}
 			_ = CurrentTasks.Remove(urlTrees);
 		}
