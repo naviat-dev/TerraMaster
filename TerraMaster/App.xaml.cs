@@ -11,10 +11,10 @@ public partial class App : Application
 {
 	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
 	static string SavePath = "E:/testing/";
-	static string TempPath;
+	static readonly string TempPath = Path.GetTempPath();
+	static readonly string StorePath = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
-
 	static readonly Dictionary<string, double[]> Airports = [];
 	static int OrthoRes = 2048;
 	static bool InternetConnected = false;
@@ -81,8 +81,6 @@ public partial class App : Application
 
 	static void TMStart()
 	{
-		TempPath = Path.GetTempPath();
-		Console.WriteLine(TempPath);
 		// Request airport index and parse into dictionary
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
