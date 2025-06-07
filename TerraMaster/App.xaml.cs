@@ -13,7 +13,7 @@ public partial class App : Application
 	static string SavePath = "E:/testing/";
 	static string TempPath;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
-	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/"];
+	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
 
 	static readonly Dictionary<string, double[]> Airports = [];
 	static int OrthoRes = 2048;
