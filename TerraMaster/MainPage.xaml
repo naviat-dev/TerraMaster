@@ -95,7 +95,8 @@
 						x:Name="settingsButton"
 						Grid.Row="2"
 						Grid.Column="0"
-						Style="{StaticResource MenuButtonStyle}">
+						Style="{StaticResource MenuButtonStyle}"
+						Click="GoToSettingsPage">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/settings.png"

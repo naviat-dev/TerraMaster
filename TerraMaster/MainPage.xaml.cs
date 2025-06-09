@@ -6,4 +6,10 @@ public sealed partial class MainPage : Page
     {
         this.InitializeComponent();
     }
+
+    private void GoToSettingsPage(object sender, RoutedEventArgs e)
+    {
+        // Navigate to the Settings page
+        Frame.Navigate(typeof(SettingsPage));
+    }
 }
