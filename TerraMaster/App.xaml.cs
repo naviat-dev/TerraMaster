@@ -12,7 +12,7 @@ public partial class App : Application
 	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
 	static string SavePath = "E:/testing/";
 	static readonly string TempPath = Path.GetTempPath();
-	static readonly string StorePath = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
+	static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
 	static readonly Dictionary<string, double[]> Airports = [];
@@ -353,7 +353,7 @@ public partial class App : Application
 			using SKBitmap resized = cropped.Resize(new SKImageInfo(original.Width, original.Height), SKSamplingOptions.Default);
 			using var image = SKImage.FromBitmap(resized);
 			using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
-			using var stream = System.IO.File.OpenWrite(name);
+			using var stream = File.OpenWrite(name);
 			data.SaveTo(stream);
 		}
 
