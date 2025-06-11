@@ -11,7 +11,7 @@ public partial class App : Application
 {
 	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
 	static string SavePath = "E:/testing/";
-	static readonly string TempPath = Path.GetTempPath();
+	static readonly string TempPath = Path.GetTempPath() + "terramaster/";
 	static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
@@ -81,6 +81,11 @@ public partial class App : Application
 
 	static void TMStart()
 	{
+		if (!Directory.Exists(TempPath))
+		{
+			_ = Directory.CreateDirectory(TempPath);
+			Console.WriteLine("Creating temp directory...");
+		}
 		// Request airport index and parse into dictionary
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
