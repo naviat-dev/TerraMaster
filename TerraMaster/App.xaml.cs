@@ -325,10 +325,10 @@ public partial class App : Application
 		double lon1 = lon1Deg * Math.PI / 180.0;
 		double lon2 = lon2Deg * Math.PI / 180.0;
 
-		var sdlat = Math.Sin((lat2 - lat1) / 2);
-		var sdlon = Math.Sin((lon2 - lon1) / 2);
-		var q = sdlat * sdlat + Math.Cos(lat1) * Math.Cos(lat2) * sdlon * sdlon;
-		var d = 2 * r * Math.Asin(Math.Sqrt(q));
+		double sdlat = Math.Sin((lat2 - lat1) / 2);
+		double sdlon = Math.Sin((lon2 - lon1) / 2);
+		double q = sdlat * sdlat + Math.Cos(lat1) * Math.Cos(lat2) * sdlon * sdlon;
+		double d = 2 * r * Math.Asin(Math.Sqrt(q));
 		return d;
 	}
 
@@ -829,7 +829,7 @@ public partial class App : Application
 				{
 					if (!reader.Entry.IsDirectory)
 					{
-						using var tarFileStream = File.Create(SavePath + "Buildings/" + subfolderTxz + reader.Entry);
+						using FileStream tarFileStream = File.Create(SavePath + "Buildings/" + subfolderTxz + reader.Entry);
 						reader.WriteEntryTo(tarFileStream);
 					}
 				}
@@ -860,13 +860,13 @@ public partial class App : Application
 				}
 				await File.WriteAllBytesAsync(SavePath + "Details/" + subfolder + ".txz", detailsBytes);
 				Console.WriteLine("Unzipping " + SavePath + "Details/" + subfolder + ".txz ...");
-				using var xzStream = File.OpenRead(SavePath + "Details/" + subfolder + ".txz");
+				using FileStream xzStream = File.OpenRead(SavePath + "Details/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
 				{
 					if (!reader.Entry.IsDirectory)
 					{
-						using var tarFileStream = File.Create(SavePath + "Details/" + subfolderTxz + reader.Entry);
+						using FileStream tarFileStream = File.Create(SavePath + "Details/" + subfolderTxz + reader.Entry);
 						reader.WriteEntryTo(tarFileStream);
 					}
 				}
@@ -897,13 +897,13 @@ public partial class App : Application
 				}
 				await File.WriteAllBytesAsync(SavePath + "Pylons/" + subfolder + ".txz", pylonsBytes);
 				Console.WriteLine("Unzipping " + SavePath + "Pylons/" + subfolder + ".txz ...");
-				using var xzStream = File.OpenRead(SavePath + "Pylons/" + subfolder + ".txz");
+				using FileStream xzStream = File.OpenRead(SavePath + "Pylons/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
 				{
 					if (!reader.Entry.IsDirectory)
 					{
-						using var tarFileStream = File.Create(SavePath + "Pylons/" + subfolderTxz + reader.Entry);
+						using FileStream tarFileStream = File.Create(SavePath + "Pylons/" + subfolderTxz + reader.Entry);
 						reader.WriteEntryTo(tarFileStream);
 					}
 				}
@@ -934,13 +934,13 @@ public partial class App : Application
 				}
 				await File.WriteAllBytesAsync(SavePath + "Roads/" + subfolder + ".txz", roadsBytes);
 				Console.WriteLine("Unzipping " + SavePath + "Roads/" + subfolder + ".txz ...");
-				using var xzStream = File.OpenRead(SavePath + "Roads/" + subfolder + ".txz");
+				using FileStream xzStream = File.OpenRead(SavePath + "Roads/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
 				{
 					if (!reader.Entry.IsDirectory)
 					{
-						using var tarFileStream = File.Create(SavePath + "Roads/" + subfolderTxz + reader.Entry);
+						using FileStream tarFileStream = File.Create(SavePath + "Roads/" + subfolderTxz + reader.Entry);
 						reader.WriteEntryTo(tarFileStream);
 					}
 				}
@@ -971,13 +971,13 @@ public partial class App : Application
 				}
 				await File.WriteAllBytesAsync(SavePath + "Trees/" + subfolder + ".txz", treesBytes);
 				Console.WriteLine("Unzipping " + SavePath + "Trees/" + subfolder + ".txz ...");
-				using var xzStream = File.OpenRead(SavePath + "Trees/" + subfolder + ".txz");
+				using FileStream xzStream = File.OpenRead(SavePath + "Trees/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
 				{
 					if (!reader.Entry.IsDirectory)
 					{
-						using var tarFileStream = File.Create(SavePath + "Trees/" + subfolderTxz + reader.Entry);
+						using FileStream tarFileStream = File.Create(SavePath + "Trees/" + subfolderTxz + reader.Entry);
 						reader.WriteEntryTo(tarFileStream);
 					}
 				}
