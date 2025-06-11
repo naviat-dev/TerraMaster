@@ -333,39 +333,6 @@ public partial class App : Application
 	}
 
 	/// <summary>
-	/// Crops the given image by the specified amount on the top and bottom, and resizes it to the original size.
-	/// </summary>
-	/// <param name="cropYTop">The number of pixels to remove from the top.</param>
-	/// <param name="cropYBottom">The number of pixels to remove from the bottom.</param>
-	/// <param name="name">The name of the file to be cropped.</param>
-	/// <remarks>
-	/// The image is first cropped, then resized to the original size.
-	/// The cropping area is defined as a rectangle with the top left corner at (0, <paramref name="cropYTop"/>) and the bottom right corner at (<paramref name="name"/>'s width, <paramref name="name"/>'s height - <paramref name="cropYBottom"/>).
-	/// </remarks>
-	static void ImageCrop(int cropYTop, int cropYBottom, string name)
-	{
-		using (SKBitmap original = SKBitmap.Decode(name))
-		{
-			// Define crop area
-			int cropWidth = original.Width - 100, cropHeight = original.Height - 100;
-
-			using SKBitmap cropped = new(cropWidth, cropHeight);
-			using (SKCanvas canvas = new(cropped))
-			{
-				canvas.DrawBitmap(original, new SKRect(0, cropYTop, original.Width, original.Height - (cropYTop + cropYBottom)), new SKRect(0, 0, cropWidth, cropHeight));
-			}
-
-			using SKBitmap resized = cropped.Resize(new SKImageInfo(original.Width, original.Height), SKSamplingOptions.Default);
-			using var image = SKImage.FromBitmap(resized);
-			using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
-			using var stream = File.OpenWrite(name);
-			data.SaveTo(stream);
-		}
-
-		Console.WriteLine("Image cropped and resized successfully.");
-	}
-
-	/// <summary>
 	/// Downloads terrain, orthophoto and OpenStreetMap data related to a geographic tile at specified latitude and longitude.
 	/// </summary>
 	/// <param name="lat">The latitude of the tile's center.</param>
@@ -616,13 +583,7 @@ public partial class App : Application
 		string tile = GetTileIndex(lat, lon).ToString();
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		double[,] bbox = GetTileBoundingBox(lat, lon);
-		double[,] bboxMercator = { { 0, 0 }, { 0, 0 } };
-		bboxMercator[0, 0] = Math.Log(Math.Tan((90.0 + bbox[0, 0]) * Math.PI / 360.0)) * 6378137;
-		bboxMercator[0, 1] = bbox[0, 1] * Math.PI * 6378137 / 180;
-		bboxMercator[1, 0] = Math.Log(Math.Tan((90.0 + bbox[1, 0]) * Math.PI / 360.0)) * 6378137;
-		bboxMercator[1, 1] = bbox[1, 1] * Math.PI * 6378137 / 180;
-		int crop = (OrthoRes - (int)Math.Abs((bboxMercator[0, 0] - bboxMercator[1, 0]) / (bboxMercator[0, 1] - bboxMercator[1, 1]) * OrthoRes)) / 2;
-
+		double[,] bboxMercator = { { Math.Log(Math.Tan((90.0 + bbox[0, 0]) * Math.PI / 360.0)) * 6378137, bbox[0, 1] * Math.PI * 6378137 / 180 }, { Math.Log(Math.Tan((90.0 + bbox[1, 0]) * Math.PI / 360.0)) * 6378137, bbox[1, 1] * Math.PI * 6378137 / 180 } };
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 		using HttpClient client = new(handler);
 		string urlPic = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=" + bboxMercator[0, 1] + "%2C" + bboxMercator[0, 0] + "%2C" + bboxMercator[1, 1] + "%2C" + bboxMercator[1, 0] + "&bboxSR=&layers=&layerDefs=&size=" + size + "%2C" + size + "&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
@@ -630,15 +591,87 @@ public partial class App : Application
 		{
 			if (CurrentTasks.Add(urlPic))
 			{
-				Console.WriteLine("Downloading " + urlPic + " ...");
-				byte[] orthoBytes = await client.GetByteArrayAsync(urlPic);
 				if (!Directory.Exists(SavePath + "Orthophotos/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(SavePath + "Orthophotos/" + subfolder);
 					Console.WriteLine("Creating orthophoto directories...");
 				}
-				await File.WriteAllBytesAsync(TempPath + tile + ".jpg", orthoBytes);
-				ImageCrop(crop, 0, TempPath + tile + ".jpg");
+				int subTileCount = size < 2048 ? 1 : (int)Math.Pow(size / 2048, 2);
+				int tilesPerSide = (int)Math.Sqrt(subTileCount);
+				double stepLat = Math.Abs((bboxMercator[1, 0] - bboxMercator[0, 0]) / tilesPerSide);
+				double stepLon = Math.Abs((bboxMercator[1, 1] - bboxMercator[0, 1]) / tilesPerSide);
+				double[] latSteps = [.. Enumerable.Range(0, tilesPerSide + 1).Select(k => bboxMercator[0, 0] + k * stepLat)];
+				double[] lonSteps = [.. Enumerable.Range(0, tilesPerSide + 1).Select(k => bboxMercator[0, 1] + k * stepLon)];
+				int count = 1;
+				int totalHeight = 0;
+				// These tiles need to be broken up into smaller tiles, because the ArcGIS server tends to give 504s higher than 2048px
+				// Even if the tile is smaller than 2048px, this should still work fine
+				for (int i = 0; i < latSteps.Length - 1; i++)
+				{
+					int crop = (2048 - (int)Math.Abs(stepLat / stepLon * 2048)) / 2;
+					totalHeight += 2048 - (crop * 2);
+					for (int j = 0; j < lonSteps.Length - 1; j++)
+					{
+						string urlSubPic = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=" + lonSteps[j] + "%2C" + latSteps[i] + "%2C" + lonSteps[j + 1] + "%2C" + latSteps[i + 1] + "&bboxSR=&layers=&layerDefs=&size=2048%2C2048&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
+						Console.WriteLine("Downloading " + urlSubPic + " ...");
+						byte[] orthoSubBytes = await client.GetByteArrayAsync(urlSubPic);
+						await File.WriteAllBytesAsync(TempPath + tile + "_" + count + ".jpg", orthoSubBytes);
+						Console.WriteLine($"Cropping {TempPath + tile + "_" + count + ".jpg"}: {crop}px from top, {crop}px from bottom");
+						using (var original = SKBitmap.Decode(TempPath + tile + "_" + count + ".jpg"))
+						{
+							int croppedHeight = original.Height - (crop * 2);
+							var cropped = new SKBitmap(original.Width, croppedHeight);
+							using (var canvas = new SKCanvas(cropped))
+							{
+								// Draw the central part of the original image into the cropped bitmap
+								canvas.DrawBitmap(
+									original,
+									new SKRect(0, crop, original.Width, crop + croppedHeight), // source rect
+									new SKRect(0, 0, original.Width, croppedHeight)                  // dest rect
+								);
+							}
+							// Save or keep in memory for stitching
+							using var image = SKImage.FromBitmap(cropped);
+							using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
+							using var stream = File.OpenWrite(TempPath + tile + "_" + count + ".jpg");
+							data.SaveTo(stream);
+						}
+						count++;
+					}
+				}
+
+				int rows = tilesPerSide;
+				int cols = tilesPerSide;
+				int tileWidth = 2048;
+				int tileHeight = totalHeight / rows;
+				Console.WriteLine(cols + " columns, " + rows + " rows, " + tileWidth + "px width, " + tileHeight + "px height");
+				if (totalHeight % rows != 0)
+				{
+					tileHeight += totalHeight % rows;
+				}
+				using var stitched = new SKBitmap(2048 * tilesPerSide, tileHeight * tilesPerSide);
+				// Stitch the tiles together
+				using (var canvas = new SKCanvas(stitched))
+				{
+					int count2 = 1;
+					for (int row = tilesPerSide - 1; row >= 0; row--)
+					{
+						for (int col = 0; col < tilesPerSide; col++)
+						{
+							string tilePath = TempPath + tile + "_" + count2 + ".jpg";
+							using SKBitmap subTile = SKBitmap.Decode(tilePath);
+							canvas.DrawBitmap(subTile, new SKPoint(col * 2048, row * tileHeight));
+							count2++;
+							// Delete the sub-tile after stitching
+							File.Delete(tilePath);
+						}
+					}
+					// Save the stitched image
+					using SKImage image = SKImage.FromBitmap(stitched);
+					using SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
+					using FileStream stream = File.OpenWrite(TempPath + tile + ".jpg");
+					data.SaveTo(stream);
+				}
 				ProcessStartInfo startInfo = new()
 				{
 					FileName = "texconv.exe",
