@@ -35,7 +35,8 @@
 						x:Name="tileButton"
 						Grid.Row="0"
 						Grid.Column="0"
-						Style="{StaticResource MenuButtonStyle}">
+						Style="{StaticResource MenuButtonStyle}"
+						Click="GoToTilePage">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/tilemap.png"
@@ -50,7 +51,8 @@
 						x:Name="arptButton"
 						Grid.Row="0"
 						Grid.Column="1"
-						Style="{StaticResource MenuButtonStyle}">
+						Style="{StaticResource MenuButtonStyle}"
+						Click="GoToArptPage">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/airport.png"
@@ -65,7 +67,8 @@
 						x:Name="planButton"
 						Grid.Row="1"
 						Grid.Column="0"
-						Style="{StaticResource MenuButtonStyle}">
+						Style="{StaticResource MenuButtonStyle}"
+						Click="GoToPlanPage">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/flightplan.png"
@@ -80,7 +83,8 @@
 						x:Name="fgButton"
 						Grid.Row="1"
 						Grid.Column="1"
-						Style="{StaticResource MenuButtonStyle}">
+						Style="{StaticResource MenuButtonStyle}"
+						Click="GoToFGPage">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/flightgear.png"
@@ -111,7 +115,8 @@
 						x:Name="infoButton"
 						Grid.Row="2"
 						Grid.Column="1"
-						Style="{StaticResource MenuButtonStyle}">
+						Style="{StaticResource MenuButtonStyle}"
+						Click="GoToInfoPage">
 						<StackPanel Orientation="Horizontal"
 								VerticalAlignment="Center">
 							<Image Source="Assets/Icons/info.png"
