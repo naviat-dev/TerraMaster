@@ -29,6 +29,12 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="SharpCompress" />
+    <PackageReference Include="Silk.NET.OpenGL" />
+    <PackageReference Include="SkiaSharp.Views" />
+    <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
+    <PackageReference Include="SkiaSharp.Views.Gtk3" />
+    <PackageReference Include="OpenTK" />
   </ItemGroup>
+
 
 </Project>
