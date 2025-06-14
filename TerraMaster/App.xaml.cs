@@ -15,6 +15,7 @@ public partial class App : Application
 	static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
+	static readonly string[] Ws3ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws3/", "https://de1mirror.flightgear.org/ws3/"];
 	static readonly Dictionary<string, double[]> Airports = [];
 	static int OrthoRes = 2048;
 	static bool InternetConnected = false;
