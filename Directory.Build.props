@@ -13,10 +13,5 @@
     <NoWarn>$(NoWarn);NU1507;NETSDK1201;PRI257</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Silk.NET.OpenGL" Version="2.22.0" />
-    <PackageVersion Include="SkiaSharp.Views" Version="3.119.0" />
-    <PackageVersion Include="SkiaSharp.Views.Desktop.Common" Version="3.119.0" />
-    <PackageVersion Include="SkiaSharp.Views.Gtk3" Version="3.119.0" />
-    <PackageVersion Include="OpenTK" Version="4.7.6" />
   </ItemGroup>
 </Project>
