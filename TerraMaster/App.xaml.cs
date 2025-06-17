@@ -234,6 +234,32 @@ public partial class App : Application
 		;
 	}
 
+	public static (double lat, double lon) GetLatLon(int tileIndex)
+	{
+		// Extract x, y, baseY, baseX from the tile index
+		int x = tileIndex & 0b111; // last 3 bits
+		int y = (tileIndex >> 3) & 0b111111; // next 6 bits
+		int baseY = ((tileIndex >> 6) & 0b1111111) - 90; // next 7 bits, then subtract 90
+		int baseX = ((tileIndex >> 14) & 0b11111111) - 180; // next 8 bits, then subtract 180
+
+		// You need to determine the tileWidth for this latitude band
+		double lookup = Math.Abs(baseY);
+		double tileWidth = 0;
+		for (int i = 0; i < LatitudeIndex.GetLength(0); i++)
+		{
+			if (lookup >= LatitudeIndex[i, 0])
+			{
+				tileWidth = LatitudeIndex[i, 1];
+				break;
+			}
+		}
+
+		double lon = baseX + x * tileWidth;
+		double lat = baseY + y / 8.0;
+
+		return (lat, lon);
+	}
+
 	/// <summary>
 	/// Gets the bounding box of a terrasync tile containing the given coordinates
 	/// </summary>
