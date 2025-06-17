@@ -851,7 +851,7 @@ public partial class App : Application
 					}
 				}
 			}
-			catch (HttpRequestException ex)
+			catch (HttpRequestException)
 			{
 				_ = CurrentTasks.Remove(urlObj);
 				throw; // Rethrow the exception to be caught in the main method
