@@ -80,51 +80,6 @@ public partial class App : Application
 		throw new InvalidOperationException($"Failed to load {e.SourcePageType.FullName}: {e.Exception}");
 	}
 
-	static void TMStart()
-	{
-		if (!Directory.Exists(TempPath))
-		{
-			_ = Directory.CreateDirectory(TempPath);
-			Console.WriteLine("Creating temp directory...");
-		}
-		// Request airport index and parse into dictionary
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
-
-		using (HttpClient client = new(handler))
-		{
-			try
-			{
-				Console.WriteLine("Downloading airport index...");
-				string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
-				foreach (string airport in airports)
-				{
-					if (airport == "") continue;
-					string[] airportInfo = airport.Split("|");
-					Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
-				}
-				Console.WriteLine("Done.");
-			}
-			catch (Exception ex)
-			{
-				if (ex is AggregateException aggEx && aggEx.InnerException is HttpRequestException httpEx)
-				{
-					Console.WriteLine($"Error downloading airport index: {httpEx.StatusCode} - {httpEx.Message}");
-				}
-				else
-				{
-					Console.WriteLine($"Error downloading airport index: {ex.Message}");
-				}
-				// Consider whether the application should continue without airport data
-			}
-		}
-		Console.WriteLine("Reading scenery metadata...");
-		if (File.Exists(SavePath))
-		{
-		}
-
-		_ = DownloadPlan("C:\\Users\\King\\Downloads\\KSEA-CYVR.fgfp", 30);
-	}
-
 	/// <summary>
 	/// Configures global Uno Platform logging
 	/// </summary>
@@ -195,6 +150,56 @@ public partial class App : Application
 #endif
 	}
 
+	/// <summary>
+	/// Initializes the TerraMaster application by setting up necessary directories, downloading and parsing the airport index,
+	/// reading scenery metadata, and initiating downloads for specific tiles and flight plans.
+	/// </summary>
+	static void TMStart()
+	{
+		if (!Directory.Exists(TempPath))
+		{
+			_ = Directory.CreateDirectory(TempPath);
+			Console.WriteLine("Creating temp directory...");
+		}
+		// Request airport index and parse into dictionary
+		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
+
+		using (HttpClient client = new(handler))
+		{
+			try
+			{
+				Console.WriteLine("Downloading airport index...");
+				string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
+				foreach (string airport in airports)
+				{
+					if (airport == "") continue;
+					string[] airportInfo = airport.Split("|");
+					Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
+				}
+				Console.WriteLine("Done.");
+			}
+			catch (Exception ex)
+			{
+				if (ex is AggregateException aggEx && aggEx.InnerException is HttpRequestException httpEx)
+				{
+					Console.WriteLine($"Error downloading airport index: {httpEx.StatusCode} - {httpEx.Message}");
+				}
+				else
+				{
+					Console.WriteLine($"Error downloading airport index: {ex.Message}");
+				}
+			}
+		}
+
+		// _ = DownloadTile(0, 0, 2048, "ws2");
+		foreach ((double, double) tile in GetTilesWithinRadius(Airports["UUEE"][1], Airports["UUEE"][0], 5))
+		{
+			// _ = DownloadTerrain(tile.Item1, tile.Item2, "ws3");
+		}
+
+		// _ = DownloadPlan("C:\\Users\\King\\Downloads\\KSFO-OMDB.fgfp", 50);
+		Console.WriteLine("Done.");
+	}
 	/// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
 	/// </summary>
