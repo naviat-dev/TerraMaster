@@ -698,8 +698,8 @@ public partial class App : Application
 
 	static async Task DownloadAirport(string code, string version)
 	{
-		string subfolder = "Airports/" + string.Join("/", code[..^1].ToCharArray());
-		string parent = TerrServerUrl + version + "/" + subfolder;
+		string subfolder = version + "/Airports/" + string.Join("/", code[..^1].ToCharArray());
+		string parent = TerrServerUrl + subfolder;
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 		using HttpClient client = new(handler);
 		try
