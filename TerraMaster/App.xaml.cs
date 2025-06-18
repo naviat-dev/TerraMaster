@@ -439,28 +439,29 @@ public partial class App : Application
 		string hemiLon = lon > 0 ? "e" : "w";
 		string tile = GetTileIndex(lat, lon).ToString();
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
-		string urlBtg = TerrServerUrl + version + "/Terrain/" + subfolder + tile + ".btg.gz";
 		string urlStg = TerrServerUrl + version + "/Terrain/" + subfolder + tile + ".stg";
 
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 		using HttpClient client = new(handler);
 		if (version == "ws2")
 		{
+			string urlBtg = TerrServerUrl + version + "/Terrain/" + subfolder + tile + ".btg.gz"; // Only used in WS2
+			string Ws2Dir = SavePath + "ws2/";
 			if (CurrentTasks.Add(urlBtg))
 			{
 				try
 				{
 					Console.WriteLine("Downloading " + urlBtg + " ...");
 					byte[] btgBytes = await client.GetByteArrayAsync(urlBtg);
-					if (!Directory.Exists(SavePath + "Terrain/" + subfolder))
+					if (!Directory.Exists(Ws2Dir + "Terrain/" + subfolder))
 					{
-						_ = Directory.CreateDirectory(SavePath + "Terrain/" + subfolder);
+						_ = Directory.CreateDirectory(Ws2Dir + "Terrain/" + subfolder);
 						Console.WriteLine("Creating terrain directories...");
 					}
-					await File.WriteAllBytesAsync(SavePath + "Terrain/" + subfolder + tile + ".btg.gz", btgBytes);
+					await File.WriteAllBytesAsync(Ws2Dir + "Terrain/" + subfolder + tile + ".btg.gz", btgBytes);
 					_ = CurrentTasks.Remove(urlBtg);
 				}
-				catch (HttpRequestException ex)
+				catch (HttpRequestException)
 				{
 					_ = CurrentTasks.Remove(urlBtg);
 					throw; // Rethrow the exception to be caught in the main method
@@ -473,13 +474,13 @@ public partial class App : Application
 				{
 					Console.WriteLine("Downloading " + urlStg + " ...");
 					byte[] stgBytes = await client.GetByteArrayAsync(urlStg);
-					if (!Directory.Exists(SavePath + "Terrain/" + subfolder))
+					if (!Directory.Exists(Ws2Dir + "Terrain/" + subfolder))
 					{
-						_ = Directory.CreateDirectory(SavePath + "Terrain/" + subfolder);
+						_ = Directory.CreateDirectory(Ws2Dir + "Terrain/" + subfolder);
 						Console.WriteLine("Creating terrain directories...");
 					}
-					Console.WriteLine(SavePath + "Terrain/" + subfolder + tile + ".stg");
-					await File.WriteAllBytesAsync(SavePath + "Terrain/" + subfolder + tile + ".stg", stgBytes);
+					Console.WriteLine(Ws2Dir + "Terrain/" + subfolder + tile + ".stg");
+					await File.WriteAllBytesAsync(Ws2Dir + "Terrain/" + subfolder + tile + ".stg", stgBytes);
 					string[] stgFile = System.Text.Encoding.UTF8.GetString(stgBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 					foreach (string line in stgFile)
 					{
@@ -492,7 +493,7 @@ public partial class App : Application
 							{
 								Console.WriteLine("Downloading " + urlObj + " ...");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
-								try { await File.WriteAllBytesAsync(SavePath + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Ws2Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
 								_ = CurrentTasks.Remove(urlObj);
 							}
 						}
@@ -547,7 +548,7 @@ public partial class App : Application
 						}
 					}
 				}
-				catch (HttpRequestException ex)
+				catch (HttpRequestException)
 				{
 					_ = CurrentTasks.Remove(urlStg);
 					throw; // Rethrow the exception to be caught in the main method
@@ -557,11 +558,141 @@ public partial class App : Application
 		}
 		else if (version == "ws3")
 		{
+			string urlVpb = TerrServerUrl + version + "/vpb/" + subfolder[..^1] + ".zip"; // Only used in WS3
+			string Ws3Dir = SavePath + "ws3/";
+			if (CurrentTasks.Add(urlStg))
+			{
+				try
+				{
+					Console.WriteLine("Downloading " + urlStg + " ...");
+					byte[] stgBytes = await client.GetByteArrayAsync(urlStg);
+					if (!Directory.Exists(Ws3Dir + "Terrain/" + subfolder))
+					{
+						_ = Directory.CreateDirectory(Ws3Dir + "Terrain/" + subfolder);
+						Console.WriteLine("Creating terrain directories...");
+					}
+					Console.WriteLine(Ws3Dir + "Terrain/" + subfolder + tile + ".stg");
+					await File.WriteAllBytesAsync(Ws3Dir + "Terrain/" + subfolder + tile + ".stg", stgBytes);
+					string[] stgFile = System.Text.Encoding.UTF8.GetString(stgBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
+					foreach (string line in stgFile)
+					{
+						string[] tokens = line.Split(' ');
+						if (tokens[0] == "OBJECT")
+						{
+							_ = DownloadAirport(tokens[1].Split(".")[0], version);
+							string urlObj = TerrServerUrl + version + "/Terrain/" + subfolder + tokens[1] + ".gz";
+							if (CurrentTasks.Add(urlObj))
+							{
+								Console.WriteLine("Downloading " + urlObj + " ...");
+								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
+								try { await File.WriteAllBytesAsync(Ws3Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								_ = CurrentTasks.Remove(urlObj);
+							}
+						}
+						else if (tokens[0] == "OBJECT_SHARED")
+						{
+							if (!Directory.Exists(Path.GetDirectoryName(SavePath + "/" + tokens[1])))
+							{
+								_ = Directory.CreateDirectory(Path.GetDirectoryName(SavePath + "/" + tokens[1]));
+							}
 
-		}
-		else
-		{
-
+							string acFile;
+							string urlXml = TerrServerUrl + version + "/" + tokens[1];
+							if (CurrentTasks.Add(urlXml))
+							{
+								if (tokens[1].EndsWith(".xml"))
+								{
+									Console.WriteLine("Downloading " + urlXml + " ...");
+									byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
+									try { await File.WriteAllBytesAsync(SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+									_ = CurrentTasks.Remove(urlXml);
+									string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
+									acFile = Path.GetDirectoryName(tokens[1]).Replace("\\", "/") + "/" + objectFile.Substring(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6);
+								}
+								else
+								{
+									acFile = tokens[1];
+								}
+								string urlAc = TerrServerUrl + version + "/" + acFile;
+								if (CurrentTasks.Add(urlAc))
+								{
+									Console.WriteLine("Downloading " + urlAc + " ...");
+									byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
+									try { await File.WriteAllBytesAsync(SavePath + "/" + acFile, modelBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+									_ = CurrentTasks.Remove(urlAc);
+									string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
+									foreach (string modelLine in modelFile)
+									{
+										if (modelLine.StartsWith("texture "))
+										{
+											string urlTex = TerrServerUrl + version + "/" + Path.GetDirectoryName(acFile).Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
+											if (CurrentTasks.Add(urlTex))
+											{
+												Console.WriteLine("Downloading " + urlTex + " ...");
+												byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
+												try { await File.WriteAllBytesAsync(SavePath + "/" + Path.GetDirectoryName(acFile).Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+												_ = CurrentTasks.Remove(urlTex);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				catch (HttpRequestException)
+				{
+					_ = CurrentTasks.Remove(urlStg);
+					throw; // Rethrow the exception to be caught in the main method
+				}
+				_ = CurrentTasks.Remove(urlStg);
+			}
+			if (CurrentTasks.Add(urlVpb))
+			{
+				try
+				{
+					Console.WriteLine("Downloading " + urlVpb + " ...");
+					byte[] vpbBytes = await client.GetByteArrayAsync(urlVpb);
+					if (!Directory.Exists(Ws3Dir + "vpb/" + subfolder))
+					{
+						_ = Directory.CreateDirectory(Ws3Dir + "vpb/" + subfolder);
+						Console.WriteLine("Creating vpb directories...");
+					}
+					await File.WriteAllBytesAsync(Ws3Dir + "vpb/" + subfolder[..^1] + ".zip", vpbBytes);
+					Console.WriteLine("Unzipping " + Ws3Dir + "vpb/" + subfolder[..^1] + ".zip ...");
+					using FileStream zipStream = File.OpenRead(Ws3Dir + "vpb/" + subfolder[..^1] + ".zip");
+					using var reader = ReaderFactory.Open(zipStream);
+					while (reader.MoveToNextEntry())
+					{
+						if (!reader.Entry.IsDirectory)
+						{
+							string entryString = reader.Entry.ToString();
+							string vpbDir;
+							if (entryString.Length == 15 || entryString.EndsWith("added"))
+							{
+								vpbDir = Ws3Dir + "vpb/" + subfolder + "/";
+							}
+							else
+							{
+								vpbDir = Ws3Dir + "vpb/" + subfolder + entryString[..10] + "_root_L0_X0_Y0/";
+							}
+							Console.WriteLine(vpbDir);
+							if (!Directory.Exists(vpbDir))
+							{
+								_ = Directory.CreateDirectory(vpbDir);
+							}
+							using FileStream zipFileStream = File.Create(vpbDir + entryString);
+							reader.WriteEntryTo(zipFileStream);
+						}
+					}
+					_ = CurrentTasks.Remove(urlVpb);
+				}
+				catch (HttpRequestException)
+				{
+					_ = CurrentTasks.Remove(urlVpb);
+					throw; // Rethrow the exception to be caught in the main method
+				}
+			}
 		}
 	}
 
