@@ -854,13 +854,13 @@ public partial class App : Application
 		}
 	}
 
-	static async Task DownloadObjects(double lat, double lon, string version)
+	static async Task DownloadObjects(double lat, double lon)
 	{
 		string hemiLat = lat > 0 ? "n" : "s";
 		string hemiLon = lon > 0 ? "e" : "w";
 		string tile = GetTileIndex(lat, lon).ToString();
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
-		string urlObj = TerrServerUrl + version + "/Objects/" + subfolder + tile + ".stg";
+		string urlObj = TerrServerUrl + "ws2/Objects/" + subfolder + tile + ".stg";
 
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 		using HttpClient client = new(handler);
@@ -888,7 +888,7 @@ public partial class App : Application
 						}
 
 						string acFile;
-						string urlXml = TerrServerUrl + version + "/" + tokens[1];
+						string urlXml = TerrServerUrl + "ws2/" + tokens[1];
 						if (CurrentTasks.Add(urlXml))
 						{
 							if (tokens[1].EndsWith(".xml"))
@@ -904,7 +904,7 @@ public partial class App : Application
 							{
 								acFile = tokens[1];
 							}
-							string urlAc = TerrServerUrl + version + "/" + acFile;
+							string urlAc = TerrServerUrl + "ws2/" + acFile;
 							if (CurrentTasks.Add(urlAc))
 							{
 								Console.WriteLine("Downloading " + urlAc + " ...");
@@ -916,7 +916,7 @@ public partial class App : Application
 								{
 									if (modelLine.StartsWith("texture "))
 									{
-										string urlTex = TerrServerUrl + version + "/" + Path.GetDirectoryName(acFile).Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
+										string urlTex = TerrServerUrl + "ws2/" + Path.GetDirectoryName(acFile).Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
 										if (CurrentTasks.Add(urlTex))
 										{
 											Console.WriteLine("Downloading " + urlTex + " ...");
@@ -932,7 +932,7 @@ public partial class App : Application
 					else if (tokens[0] == "OBJECT_STATIC")
 					{
 						string acFile;
-						string urlXml = TerrServerUrl + version + "/Objects/" + subfolder + tokens[1];
+						string urlXml = TerrServerUrl + "ws2/Objects/" + subfolder + tokens[1];
 						if (CurrentTasks.Add(urlXml))
 						{
 							if (tokens[1].EndsWith(".xml"))
@@ -948,7 +948,7 @@ public partial class App : Application
 							{
 								acFile = tokens[1];
 							}
-							string urlAc = TerrServerUrl + version + "/Objects/" + subfolder + acFile;
+							string urlAc = TerrServerUrl + "ws2/Objects/" + subfolder + acFile;
 							if (CurrentTasks.Add(urlAc))
 							{
 								Console.WriteLine("Downloading " + urlAc + " ...");
@@ -960,7 +960,7 @@ public partial class App : Application
 								{
 									if (modelLine.StartsWith("texture "))
 									{
-										string urlTex = TerrServerUrl + version + "/" + "/Objects/" + subfolder + modelLine[8..].Replace("\"", "");
+										string urlTex = TerrServerUrl + "ws2/Objects/" + subfolder + modelLine[8..].Replace("\"", "");
 										if (CurrentTasks.Add(urlTex))
 										{
 											Console.WriteLine("Downloading " + urlTex + " ...");
