@@ -4,25 +4,27 @@ using SkiaSharp;
 using System.Diagnostics;
 using HtmlAgilityPack;
 using System.Xml;
+using Microsoft.Extensions.Hosting;
 
 namespace TerraMaster;
 
 public partial class App : Application
 {
 	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
-	static string SavePath = "E:/testing/";
+	static readonly string SavePath = "E:/testing/";
 	static readonly string TempPath = Path.GetTempPath() + "terramaster/";
 	static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
 	static readonly string[] Ws3ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws3/", "https://de1mirror.flightgear.org/ws3/"];
+	private static readonly IHost ServeHost;
+	private static readonly string ServeUrl = "http://localhost:5005";
 	static readonly Dictionary<string, double[]> Airports = [];
-	static int OrthoRes = 2048;
-	static bool InternetConnected = false;
-	static HashSet<string> CurrentTasks = [];
-	static SemaphoreSlim taskQueue = new(20);
-	static Dictionary<string, string[]> TerrainRecords = [];
-	static Dictionary<string, string[]> OrthoRecords = [];
+	static readonly int OrthoRes = 2048;
+	static readonly HashSet<string> CurrentTasks = [];
+	static readonly SemaphoreSlim taskQueue = new(20);
+	static readonly Dictionary<string, string[]> TerrainRecords = [];
+	static readonly Dictionary<string, string[]> OrthoRecords = [];
 	/// <summary>
 	/// Initializes the singleton application object. This is the first line of authored code
 	/// executed, and as such is the logical equivalent of main() or WinMain().
