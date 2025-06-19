@@ -17,8 +17,6 @@ public partial class App : Application
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
 	static readonly string[] Ws3ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws3/", "https://de1mirror.flightgear.org/ws3/"];
-	private static readonly IHost ServeHost;
-	private static readonly string ServeUrl = "http://localhost:5005";
 	static readonly Dictionary<string, double[]> Airports = [];
 	static readonly int OrthoRes = 2048;
 	static readonly HashSet<string> CurrentTasks = [];

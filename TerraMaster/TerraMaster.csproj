@@ -24,6 +24,7 @@
     -->
     <UnoFeatures>
       SkiaRenderer;
+      WebView;
     </UnoFeatures>
   </PropertyGroup>
   <ItemGroup>
@@ -37,6 +38,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" />
   </ItemGroup>
-
-
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 </Project>
