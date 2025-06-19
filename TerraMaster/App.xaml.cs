@@ -655,14 +655,8 @@ public partial class App : Application
 				{
 					Console.WriteLine("Downloading " + urlVpb + " ...");
 					byte[] vpbBytes = await client.GetByteArrayAsync(urlVpb);
-					if (!Directory.Exists(Ws3Dir + "vpb/" + subfolder))
-					{
-						_ = Directory.CreateDirectory(Ws3Dir + "vpb/" + subfolder);
-						Console.WriteLine("Creating vpb directories...");
-					}
-					await File.WriteAllBytesAsync(Ws3Dir + "vpb/" + subfolder[..^1] + ".zip", vpbBytes);
-					Console.WriteLine("Unzipping " + Ws3Dir + "vpb/" + subfolder[..^1] + ".zip ...");
-					using FileStream zipStream = File.OpenRead(Ws3Dir + "vpb/" + subfolder[..^1] + ".zip");
+					await File.WriteAllBytesAsync(TempPath + subfolder[..^1].Split("/")[1] + ".zip", vpbBytes);
+					using FileStream zipStream = File.OpenRead(TempPath + subfolder.Split("/")[1] + ".zip");
 					using var reader = ReaderFactory.Open(zipStream);
 					while (reader.MoveToNextEntry())
 					{
@@ -678,7 +672,6 @@ public partial class App : Application
 							{
 								vpbDir = Ws3Dir + "vpb/" + subfolder + entryString[..10] + "_root_L0_X0_Y0/";
 							}
-							Console.WriteLine(vpbDir);
 							if (!Directory.Exists(vpbDir))
 							{
 								_ = Directory.CreateDirectory(vpbDir);
