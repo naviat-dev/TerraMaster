@@ -190,14 +190,6 @@ public partial class App : Application
 				}
 			}
 		}
-
-		// _ = DownloadTile(0, 0, 2048, "ws2");
-		foreach ((double, double) tile in GetTilesWithinRadius(Airports["UUEE"][1], Airports["UUEE"][0], 5))
-		{
-			// _ = DownloadTerrain(tile.Item1, tile.Item2, "ws3");
-		}
-
-		// _ = DownloadPlan("C:\\Users\\King\\Downloads\\KSFO-OMDB.fgfp", 50);
 		Console.WriteLine("Done.");
 	}
 	/// <summary>
@@ -406,7 +398,7 @@ public partial class App : Application
 			await DownloadOrthophoto(lat, lon, size); // There should always be orthophoto data available when there is terrain data, so no try-catch here
 			try
 			{
-				await DownloadObjects(lat, lon, version);
+				await DownloadObjects(lat, lon);
 			}
 			catch (HttpRequestException ex)
 			{
@@ -1186,7 +1178,7 @@ public partial class App : Application
 		}
 	}
 
-	static async Task DownloadPlan(string filepath, int radius)
+	static async Task DownloadPlan(string filepath, string version, int size, int radius)
 	{
 		HashSet<(double, double)> tiles = [];
 		if (filepath.EndsWith(".fgfp"))
