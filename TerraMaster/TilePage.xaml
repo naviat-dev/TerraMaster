@@ -5,6 +5,11 @@
     xmlns:local="using:TerraMaster"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid>
-        <WebView2 x:Name="MyWebView"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+        <WebView2 x:Name="MyWebView"
+                Grid.Column="0"/>
     </Grid>
 </Page>
