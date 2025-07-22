@@ -34,7 +34,6 @@
     <PackageReference Include="SkiaSharp.Views" />
     <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
     <PackageReference Include="SkiaSharp.Views.Gtk3" />
-    <PackageReference Include="OpenTK" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" />
   </ItemGroup>
