@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
@@ -10,22 +11,30 @@ public static class Cesium
     private static IHost _host;
     public static string Url { get; private set; } = "http://localhost:5005";
 
-    public static Task StartAsync()
+    public static async Task StartAsync()
     {
         var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseUrls(Url);
 
         var app = builder.Build();
 
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "Assets")),
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets")),
             RequestPath = "/assets"
         });
-        builder.WebHost.UseUrls("http://localhost:5000");
 
+        // Optionally, serve cesium.js.html at root
+        app.MapGet("/", async context =>
+        {
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync(
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets", "cesium.js.html"));
+        });
 
-        return app.RunAsync("http://localhost:5000");
+        _host = app;
+        await app.RunAsync();
     }
 
     public static async Task StopAsync()
