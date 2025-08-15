@@ -385,7 +385,7 @@ public partial class App : Application
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
 					Console.WriteLine($"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download.");
-					taskQueue.Release();
+                    _ = taskQueue.Release();
 					return;
 				}
 				else
@@ -403,7 +403,7 @@ public partial class App : Application
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
 					Console.WriteLine($"Object data not found for tile at {lat}, {lon}. Skipping object download.");
-					taskQueue.Release();
+                    _ = taskQueue.Release();
 					return;
 				}
 				else
@@ -412,7 +412,7 @@ public partial class App : Application
 				}
 			}
 			await DownloadOSM(lat, lon);
-			taskQueue.Release();
+            _ = taskQueue.Release();
 
 			Console.WriteLine($"Download successful.");
 		}
@@ -420,7 +420,7 @@ public partial class App : Application
 		{
 			Console.WriteLine($"Error downloading tile: {ex.Message}");
 		}
-		taskQueue.Release();
+        _ = taskQueue.Release();
 	}
 
 	static async Task DownloadTerrain(double lat, double lon, string version)
@@ -1200,7 +1200,7 @@ public partial class App : Application
 					List<(double, double)> circle = GetTilesWithinRadius(lat, lon, radius);
 					foreach ((double latitude, double longitude) in circle)
 					{
-						tiles.Add((latitude, longitude));
+                        _ = tiles.Add((latitude, longitude));
 					}
 				}
 			}

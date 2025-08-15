@@ -14,11 +14,11 @@ public static class Cesium
     public static async Task StartAsync()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.WebHost.UseUrls(Url);
+        _ = builder.WebHost.UseUrls(Url);
 
         var app = builder.Build();
 
-        app.UseStaticFiles(new StaticFileOptions
+        _ = app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(
                 Path.Combine(Directory.GetCurrentDirectory(), "Assets")),
@@ -26,7 +26,7 @@ public static class Cesium
         });
 
         // Optionally, serve cesium.js.html at root
-        app.MapGet("/", async context =>
+        _ = app.MapGet("/", async context =>
         {
             context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync(
