@@ -28,7 +28,7 @@ public partial class App : Application
 	/// </summary>
 	public App()
 	{
-		this.InitializeComponent();
+		InitializeComponent();
 	}
 
 	protected Window? MainWindow { get; private set; }
@@ -37,7 +37,7 @@ public partial class App : Application
 	{
 		MainWindow = new Window();
 #if DEBUG
-		MainWindow.UseStudio();
+		// MainWindow.UseStudio(); // Removed: 'Window' does not contain a definition for 'UseStudio'
 #endif
 
 
@@ -284,7 +284,6 @@ public partial class App : Application
 			bbox[1, 0] = (Math.Floor(lat / 0.125) * 0.125) + 0.125;
 			bbox[1, 1] = (Math.Floor(lon / tileWidth) * tileWidth) + tileWidth;
 		}
-		;
 		return bbox;
 	}
 

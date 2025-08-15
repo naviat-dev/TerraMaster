@@ -4,7 +4,7 @@ public sealed partial class MainPage : Page
 {
     public MainPage()
     {
-        this.InitializeComponent();
+        InitializeComponent();
     }
 
     private void GoToTilePage(object sender, RoutedEventArgs e)

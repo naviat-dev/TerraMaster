@@ -4,6 +4,6 @@ public sealed partial class PlanPage : Page
 {
     public PlanPage()
     {
-        this.InitializeComponent();
+        InitializeComponent();
     }
 }
