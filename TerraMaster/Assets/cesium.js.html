@@ -5,6 +5,7 @@
 	<meta charset="UTF-8" />
 	<title>Cesium Globe (New API)</title>
 	<script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+	<script src="assets/driver.js"></script>
 	<link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css"
 		rel="stylesheet" />
 	<style>
@@ -22,41 +23,6 @@
 
 <body>
 	<div id="cesiumContainer"></div>
-	<script>
-		window.chrome.webview.postMessage("LOG:Hello from JS!");
-		window.chrome.webview.postMessage("ERR:Something went wrong!");
-		console.log = (msg) => {
-			window.chrome.webview.postMessage("LOG:" + msg);
-		};
-
-		console.error = (msg) => {
-			window.chrome.webview.postMessage("ERR:" + msg);
-		};
-
-		window.onload = async () => {
-			Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3MzQ5YzdiZS04OThlLTQ3YmMtODQ4ZS04MGJiNDZjYWNkNWQiLCJpZCI6MzEyNjkyLCJpYXQiOjE3NTAwODU1OTB9.vNCpYChTSQNmCN9s440YOJIMOOQXIWy4hB9m4LhAQlY';
-
-			const imageryProvider = await Cesium.IonImageryProvider.fromAssetId(2); // Bing Maps Aerial
-
-			const viewer = new Cesium.Viewer('cesiumContainer', {
-				baseLayer: Cesium.ImageryLayer.fromProviderAsync(imageryProvider),
-				terrain: Cesium.Terrain.fromWorldTerrain(),
-			});
-
-			viewer.scene.globe.show = true;
-
-			viewer.entities.add({
-				rectangle: {
-					coordinates: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0), // [west, south, east, north]
-					material: Cesium.Color.RED.withAlpha(0.4), // red fill with 40% opacity
-					height: 0, // <-- this disables terrain clamping
-					outline: true,
-					outlineColor: Cesium.Color.BLACK,
-					outlineWidth: 2 // optional, may not be respected depending on rendering
-				}
-			});
-		};
-	</script>
 </body>
 
 </html>
