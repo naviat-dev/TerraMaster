@@ -3,132 +3,23 @@
 	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	  xmlns:local="using:TerraMaster"
 	  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-	<Page.Resources>
-+		<Style x:Key="MenuButtonStyle" TargetType="Button">
-+			<Setter Property="HorizontalAlignment" Value="Left"/>
-+			<Setter Property="VerticalAlignment" Value="Center"/>
-+			<Setter Property="Background" Value="Transparent"/>
-+			<Setter Property="BorderThickness" Value="0"/>
-+		</Style>
-+	</Page.Resources>
-	<ScrollViewer IsTabStop="True">
-		<Grid>
-			<StackPanel
-				HorizontalAlignment="Center"
-				VerticalAlignment="Center">
-				<Image Source="Assets/Splash/terramaster-logo.png"
-					   Margin="30"/>
-				<Grid HorizontalAlignment="Center"
-					  VerticalAlignment="Center"
-					  Width="400"
-					  Height="200">
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
-					<Button
-						x:Name="tileButton"
-						Grid.Row="0"
-						Grid.Column="0"
-						Style="{StaticResource MenuButtonStyle}"
-						Click="GoToTilePage">
-						<StackPanel Orientation="Horizontal"
-								VerticalAlignment="Center">
-							<Image Source="Assets/Icons/tilemap.png"
-									Width="24"
-									Height="24"
-									Margin="0,0,8,0"/>
-							<TextBlock Text="View Tile Map"
-									VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-					<Button
-						x:Name="arptButton"
-						Grid.Row="0"
-						Grid.Column="1"
-						Style="{StaticResource MenuButtonStyle}"
-						Click="GoToArptPage">
-						<StackPanel Orientation="Horizontal"
-								VerticalAlignment="Center">
-							<Image Source="Assets/Icons/airport.png"
-									Width="24"
-									Height="24"
-									Margin="0,0,8,0"/>
-							<TextBlock Text="Download Airports"
-									VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-					<Button
-						x:Name="planButton"
-						Grid.Row="1"
-						Grid.Column="0"
-						Style="{StaticResource MenuButtonStyle}"
-						Click="GoToPlanPage">
-						<StackPanel Orientation="Horizontal"
-								VerticalAlignment="Center">
-							<Image Source="Assets/Icons/flightplan.png"
-									Width="24"
-									Height="24"
-									Margin="0,0,8,0"/>
-							<TextBlock Text="Download Flightplan"
-									VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-					<Button
-						x:Name="fgButton"
-						Grid.Row="1"
-						Grid.Column="1"
-						Style="{StaticResource MenuButtonStyle}"
-						Click="GoToFGPage">
-						<StackPanel Orientation="Horizontal"
-								VerticalAlignment="Center">
-							<Image Source="Assets/Icons/flightgear.png"
-									Width="24"
-									Height="24"
-									Margin="0,0,8,0"/>
-							<TextBlock Text="Connect to FlightGear"
-									VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-					<Button
-						x:Name="settingsButton"
-						Grid.Row="2"
-						Grid.Column="0"
-						Style="{StaticResource MenuButtonStyle}"
-						Click="GoToSettingsPage">
-						<StackPanel Orientation="Horizontal"
-								VerticalAlignment="Center">
-							<Image Source="Assets/Icons/settings.png"
-									Width="24"
-									Height="24"
-									Margin="0,0,8,0"/>
-							<TextBlock Text="Settings"
-									VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-					<Button
-						x:Name="infoButton"
-						Grid.Row="2"
-						Grid.Column="1"
-						Style="{StaticResource MenuButtonStyle}"
-						Click="GoToInfoPage">
-						<StackPanel Orientation="Horizontal"
-								VerticalAlignment="Center">
-							<Image Source="Assets/Icons/info.png"
-									Width="24"
-									Height="24"
-									Margin="0,0,8,0"/>
-							<TextBlock Text="Info"
-									VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-				</Grid>
-			</StackPanel>
-		</Grid>
-	</ScrollViewer>
+	<Grid>
+			<Grid HorizontalAlignment="Center"
+				  VerticalAlignment="Center">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="50"/>
+				</Grid.RowDefinitions>
+				<Image Grid.Row="0"
+					   Source="Assets/Splash/terramaster-globe.png"
+					   Stretch="Uniform"
+					   Margin="150"/>
+				<TextBlock Grid.Row="1"
+						   Text="Loading..."
+						   FontFamily="{StaticResource MainFont}"
+						   FontSize="24"
+						   HorizontalAlignment="Center"
+						   VerticalAlignment="Center"/>
+			</Grid>
+	</Grid>
 </Page>

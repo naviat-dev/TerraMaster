@@ -66,7 +66,7 @@ public partial class App : Application
 		// Ensure the current window is active
 		MainWindow.Activate();
 
-		TMStart();
+		// TMStart();
 	}
 
 	/// <summary>
@@ -153,7 +153,7 @@ public partial class App : Application
 	/// Initializes the TerraMaster application by setting up necessary directories, downloading and parsing the airport index,
 	/// reading scenery metadata, and initiating downloads for specific tiles and flight plans.
 	/// </summary>
-	static void TMStart()
+	public async static Task TMStart()
 	{
 		if (!Directory.Exists(TempPath))
 		{
@@ -168,7 +168,7 @@ public partial class App : Application
 			try
 			{
 				Console.WriteLine("Downloading airport index...");
-				string[] airports = System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt").Result).Split(["\r\n", "\n"], StringSplitOptions.None);
+				string[] airports = System.Text.Encoding.UTF8.GetString(await client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt")).Split(["\r\n", "\n"], StringSplitOptions.None);
 				foreach (string airport in airports)
 				{
 					if (airport == "") continue;
@@ -189,7 +189,6 @@ public partial class App : Application
 				}
 			}
 		}
-		Console.WriteLine("Done.");
 	}
 	/// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
