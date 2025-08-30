@@ -16,7 +16,7 @@
 					   Margin="150"/>
 				<TextBlock Grid.Row="1"
 						   Text="Loading..."
-						   FontFamily="{StaticResource MainFont}"
+						   FontFamily="ms-appx:///Assets/Fonts/BAHNSCHRIFT.TTF#Bahnschrift"
 						   FontSize="24"
 						   HorizontalAlignment="Center"
 						   VerticalAlignment="Center"/>

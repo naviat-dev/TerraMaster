@@ -12,6 +12,5 @@
 			<!-- Add resources here -->
 
 		</ResourceDictionary>
-		<FontFamily x:Key="MainFont">Assets/Fonts/bahnschrift.ttf#Bahnschrift</FontFamily>
 	</Application.Resources>
 </Application>

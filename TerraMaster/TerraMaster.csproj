@@ -41,7 +41,7 @@
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 	<ItemGroup>
-		<Content Include="Assets\Fonts\bahnschrift.ttf">
+		<Content Include="Assets\Fonts\BAHNSCHRIFT.TTF">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
