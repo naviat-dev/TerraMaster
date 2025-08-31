@@ -40,8 +40,19 @@ public static class Cesium
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
             }
         });
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            OnPrepareResponse = ctx =>
+            {
+                ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+                ctx.Context.Response.Headers.Pragma = "no-cache";
+                ctx.Context.Response.Headers.Expires = "0";
+            }
+        });
+
         _host = app;
-        await app.RunAsync();
+        _ = app.RunAsync();
     }
 
     public static async Task StopAsync()
