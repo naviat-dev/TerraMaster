@@ -9,31 +9,45 @@ public sealed partial class MainPage : Page
 	{
 
 		InitializeComponent();
-		LoadingChanged += (message) => loadingText.Text = message;
-		this.Loaded += (s, e) =>
+		LoadingChanged += (message) =>
+		{
+			// Ensure UI updates are marshaled to the UI thread
+			if (Dispatcher.HasThreadAccess)
+			{
+				loadingText.Text = message;
+			}
+			else
+			{
+				_ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+				{
+					loadingText.Text = message;
+				});
+			}
+		};
+		this.Loaded += async (s, e) =>
 		{
 			try
 			{
-				Startup();
+				await Startup();
 			}
-			catch (Exception)
-            {
-				refreshButton.SetValue(VisibilityProperty, Visibility.Visible);
+			catch (Exception ex)
+			{
+				refreshButton.Visibility = Visibility.Visible;
 			}
 		};
 	}
 
-	private async void Startup()
+	private async Task Startup()
 	{
-		refreshButton.SetValue(VisibilityProperty, Visibility.Collapsed);
+		refreshButton.Visibility = Visibility.Collapsed;
 		await App.TMStart();
 		await Cesium.StartAsync();
 		_ = Frame.Navigate(typeof(TilePage));
 	}
 
-	private void Refresh(object sender, RoutedEventArgs e)
+	private async void Refresh(object sender, RoutedEventArgs e)
 	{
-		Startup();
+		await Startup();
 	}
 
 	public static void RaiseLoadingChanged(string message)
