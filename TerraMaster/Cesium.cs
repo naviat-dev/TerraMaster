@@ -29,9 +29,17 @@ public static class Cesium
         _ = app.MapGet("/", async context =>
         {
             context.Response.ContentType = "text/html";
-            await context.Response.SendFileAsync(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "cesium.js.html"));
-        });
 
+            var htmlPath = Path.Combine(app.Environment.ContentRootPath, "Assets", "cesium.js.html");
+            if (File.Exists(htmlPath))
+            {
+                await context.Response.SendFileAsync(htmlPath, 0, null, context.RequestAborted);
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+            }
+        });
         _host = app;
         await app.RunAsync();
     }
