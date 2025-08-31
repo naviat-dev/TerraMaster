@@ -1,6 +1,4 @@
 var latitudeIndex = [[89, 12], [86, 4], [83, 2], [76, 1], [62, 0.5], [22, 0.25], [0, 0.125]];
-const viewbox = viewer.camera.computeViewRectangle();
-const alt = viewer.camera.positionCartographic.height;
 
 console.log = (msg) => {
     window.chrome.webview.postMessage("LOG:" + msg);
@@ -21,6 +19,8 @@ window.onload = async () => {
     });
 
     viewer.scene.globe.show = true;
+    const viewbox = viewer.camera.computeViewRectangle();
+    const alt = viewer.camera.positionCartographic.height;
 
     /* This will draw every terrain tile. It should be noted that drawing every tile takes up bucketloads of resources, and should not be run in its current state.
     Once paired with viewboxes, this will be more useful.
