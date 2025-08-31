@@ -158,38 +158,29 @@ public partial class App : Application
 		if (!Directory.Exists(TempPath))
 		{
 			_ = Directory.CreateDirectory(TempPath);
-			Console.WriteLine("Creating temp directory...");
+			MainPage.RaiseLoadingChanged("Creating temp directory...");
 		}
 		// Request airport index and parse into dictionary
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
-		using (HttpClient client = new(handler))
+        using HttpClient client = new(handler);
+		try
 		{
-			try
+			MainPage.RaiseLoadingChanged("Downloading airport index...");
+			string[] airports = System.Text.Encoding.UTF8.GetString(await client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt")).Split(["\r\n", "\n"], StringSplitOptions.None);
+			foreach (string airport in airports)
 			{
-				Console.WriteLine("Downloading airport index...");
-				string[] airports = System.Text.Encoding.UTF8.GetString(await client.GetByteArrayAsync("https://terramaster.flightgear.org/terrasync/ws2/Airports/index.txt")).Split(["\r\n", "\n"], StringSplitOptions.None);
-				foreach (string airport in airports)
-				{
-					if (airport == "") continue;
-					string[] airportInfo = airport.Split("|");
-					Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
-				}
-				Console.WriteLine("Done.");
-			}
-			catch (Exception ex)
-			{
-				if (ex is AggregateException aggEx && aggEx.InnerException is HttpRequestException httpEx)
-				{
-					Console.WriteLine($"Error downloading airport index: {httpEx.StatusCode} - {httpEx.Message}");
-				}
-				else
-				{
-					Console.WriteLine($"Error downloading airport index: {ex.Message}");
-				}
+				if (airport == "") continue;
+				string[] airportInfo = airport.Split("|");
+				Airports.Add(airportInfo[0], [double.Parse(airportInfo[1]), double.Parse(airportInfo[2])]);
 			}
 		}
-	}
+		catch (Exception)
+        {
+			MainPage.ErrorMessage = "An error occurred with downloading the airport index.";
+            throw;
+        }
+    }
 	/// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
 	/// </summary>
