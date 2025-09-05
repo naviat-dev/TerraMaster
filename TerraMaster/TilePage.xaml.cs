@@ -9,7 +9,7 @@ public sealed partial class TilePage : Page
 		MyWebView.Source = new Uri(Cesium.Url + "/assets/cesium.js.html");
 		MyWebView.WebMessageReceived += (s, e) =>
 		{
-			var message = e.TryGetWebMessageAsString();
+			var message = e.WebMessageAsJson;
 			Console.WriteLine("[JS: " + message + "]");
 		};
 	}
