@@ -22,7 +22,6 @@ public static class Cesium
 		_ = app.UseStaticFiles(new StaticFileOptions
 		{
 			FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Assets")),
-			RequestPath = "/temp",
 			OnPrepareResponse = ctx =>
 			{
 				ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
