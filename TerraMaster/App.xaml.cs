@@ -179,6 +179,7 @@ public partial class App : Application
             throw;
         }
     }
+
 	/// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
 	/// </summary>
@@ -233,10 +234,7 @@ public partial class App : Application
 			}
 		}
 
-		double lon = baseX + x * tileWidth;
-		double lat = baseY + y / 8.0;
-
-		return (lat, lon);
+		return (baseY + y / 8.0, baseX + x * tileWidth);
 	}
 
 	/// <summary>
