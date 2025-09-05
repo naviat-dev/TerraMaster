@@ -28,6 +28,10 @@ public partial class App : Application
 	public App()
 	{
 		InitializeComponent();
+		Suspending += static (s, e) =>
+        {
+            Cesium.StopAsync().Wait(TimeSpan.FromSeconds(3));
+        };
 	}
 
 	protected Window? MainWindow { get; private set; }
