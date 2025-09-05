@@ -6,7 +6,7 @@ public sealed partial class TilePage : Page
 	{
 		InitializeComponent();
 		_ = MyWebView.EnsureCoreWebView2Async();
-		MyWebView.Source = new Uri(Cesium.Url + "/assets/cesium.js.html");
+		MyWebView.Source = new Uri("http://localhost:5005/");
 		MyWebView.WebMessageReceived += (s, e) =>
 		{
 			var message = e.WebMessageAsJson;
