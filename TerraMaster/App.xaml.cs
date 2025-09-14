@@ -114,33 +114,6 @@ public partial class App : Application
 			builder.AddFilter("Uno", LogLevel.Warning);
 			builder.AddFilter("Windows", LogLevel.Warning);
 			builder.AddFilter("Microsoft", LogLevel.Warning);
-
-			// Generic Xaml events
-			// builder.AddFilter("Microsoft.UI.Xaml", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.VisualStateGroup", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.StateTriggerBase", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.UIElement", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.FrameworkElement", LogLevel.Trace );
-
-			// Layouter specific messages
-			// builder.AddFilter("Microsoft.UI.Xaml.Controls", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.Controls.Layouter", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.Controls.Panel", LogLevel.Debug );
-
-			// builder.AddFilter("Windows.Storage", LogLevel.Debug );
-
-			// Binding related messages
-			// builder.AddFilter("Microsoft.UI.Xaml.Data", LogLevel.Debug );
-			// builder.AddFilter("Microsoft.UI.Xaml.Data", LogLevel.Debug );
-
-			// Binder memory references tracking
-			// builder.AddFilter("Uno.UI.DataBinding.BinderReferenceHolder", LogLevel.Debug );
-
-			// DevServer and HotReload related
-			// builder.AddFilter("Uno.UI.RemoteControl", LogLevel.Information);
-
-			// Debug JS interop
-			// builder.AddFilter("Uno.Foundation.WebAssemblyRuntime", LogLevel.Debug );
 		});
 
 		global::Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
