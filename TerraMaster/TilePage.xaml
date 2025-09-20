@@ -10,6 +10,19 @@
             <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
         <WebView2 x:Name="MyWebView"
-                Grid.Column="0"/>
+                  Grid.Column="0"/>
+        <Grid x:Name="TileControls"
+              Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            <Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+        </Grid>
     </Grid>
 </Page>

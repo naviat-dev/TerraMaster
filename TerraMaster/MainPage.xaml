@@ -12,7 +12,7 @@
 			<RowDefinition Height="50"/>
 		</Grid.RowDefinitions>
 		<Image Grid.Row="0"
-			   Source="Assets/Splash/terramaster-globe.png"
+			   Source="Assets/Splash/terramaster-logo.png"
 			   Stretch="Uniform"
 			   Margin="150"/>
 		<TextBlock Grid.Row="1"
