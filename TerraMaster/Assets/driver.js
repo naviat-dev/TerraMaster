@@ -36,7 +36,7 @@ window.onload = async () => {
 					extrudedHeight: 10,
 					outline: true,
 					outlineColor: Cesium.Color.GRAY,
-					outlineWidth: 2
+					outlineWidth: 4
 				}
 			});
 		}
@@ -68,7 +68,7 @@ window.onload = async () => {
 					extrudedHeight: 10,
 					outline: true,
 					outlineColor: Cesium.Color.GRAY,
-					outlineWidth: 2
+					outlineWidth: 4
 				}
 			});
 		}
@@ -93,8 +93,6 @@ window.onload = async () => {
 			var boundsWCur = Math.floor(Cesium.Math.toDegrees(viewbox.west) / 10) + 18;
 			// If the viewbox has changed, add/remove tiles as necessary
 			if (boundsNCur !== boundsNPrev || boundsSCur !== boundsSPrev || boundsECur !== boundsEPrev || boundsWCur !== boundsWPrev) {
-				console.log("Viewbox changed. Altitude: " + alt.toFixed(0) + "m, Bounds: N" + (boundsNCur - 9) * 10 + "° S" + (boundsSCur - 9) * 10 + "° E" + (boundsECur - 18) * 10 + "° W" + (boundsWCur - 18) * 10 + "°");
-				console.log("Old viewbox: N" + (boundsNPrev - 9) * 10 + "° S" + (boundsSPrev - 9) * 10 + "° E" + (boundsEPrev - 18) * 10 + "° W" + (boundsWPrev - 18) * 10 + "°");
 				boundsNPrev = boundsNCur;
 				boundsSPrev = boundsSCur;
 				boundsEPrev = boundsECur;
@@ -107,9 +105,8 @@ window.onload = async () => {
 					}
 					for (var i = boundsSCur; i <= boundsNCur; i++) {
 						for (var j = boundsWCur; j <= boundsECur; j++) {
-							console.log("there's a chance you get stuck here...");
+							// When the map mode switches from globe to 2D, the entire window hangs right here and crashes.
 							if (i < smallTilesGrp.length && j < smallTilesGrp[i].length) {
-								console.log("...so let's see");
 								if (!viewer.dataSources.contains(smallTilesGrp[i][j])) {
 									viewer.dataSources.add(smallTilesGrp[i][j]);
 								}
