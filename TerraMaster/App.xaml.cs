@@ -1,15 +1,19 @@
 using SharpCompress.Readers;
 using SkiaSharp;
-using System.Diagnostics;
 using HtmlAgilityPack;
 using System.Xml;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using BCnEncoder.Encoder;
+using BCnEncoder.Shared;
+using BCnEncoder.ImageSharp;
 
 namespace TerraMaster;
 
 public partial class App : Application
 {
 	static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
-	static readonly string SavePath = "E:/testing/";
+	static readonly string SavePath = "C:/Users/User/Documents/Aviation/scenery-test/";
 	static readonly string TempPath = Path.GetTempPath() + "terramaster/";
 	static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
@@ -29,9 +33,9 @@ public partial class App : Application
 	{
 		InitializeComponent();
 		Suspending += static (s, e) =>
-        {
-            Cesium.StopAsync().Wait(TimeSpan.FromSeconds(3));
-        };
+		{
+			Cesium.StopAsync().Wait(TimeSpan.FromSeconds(3));
+		};
 	}
 
 	protected Window? MainWindow { get; private set; }
@@ -116,10 +120,10 @@ public partial class App : Application
 			builder.AddFilter("Microsoft", LogLevel.Warning);
 		});
 
-		global::Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
+		Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
 
 #if HAS_UNO
-		global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
+		Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
 #endif
 #endif
 	}
@@ -138,7 +142,7 @@ public partial class App : Application
 		// Request airport index and parse into dictionary
 		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 
-        using HttpClient client = new(handler);
+		using HttpClient client = new(handler);
 		try
 		{
 			MainPage.RaiseLoadingChanged("Downloading airport index...");
@@ -151,11 +155,11 @@ public partial class App : Application
 			}
 		}
 		catch (Exception)
-        {
+		{
 			MainPage.ErrorMessage = "An error occurred with downloading the airport index.";
-            throw;
-        }
-    }
+			throw;
+		}
+	}
 
 	/// <summary>
 	/// Gets the index of a terrasync tile containing the given coordinates
@@ -188,7 +192,6 @@ public partial class App : Application
 			int y = (int)Math.Truncate((lat - baseY) * 8);
 			return ((baseX + 180) << 14) + ((baseY + 90) << 6) + (y << 3) + x;
 		}
-		;
 	}
 
 	public static (double lat, double lon) GetLatLon(int tileIndex)
@@ -348,7 +351,7 @@ public partial class App : Application
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
 					Console.WriteLine($"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download.");
-                    _ = taskQueue.Release();
+					_ = taskQueue.Release();
 					return;
 				}
 				else
@@ -366,7 +369,7 @@ public partial class App : Application
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
 					Console.WriteLine($"Object data not found for tile at {lat}, {lon}. Skipping object download.");
-                    _ = taskQueue.Release();
+					_ = taskQueue.Release();
 					return;
 				}
 				else
@@ -375,7 +378,7 @@ public partial class App : Application
 				}
 			}
 			await DownloadOSM(lat, lon);
-            _ = taskQueue.Release();
+			_ = taskQueue.Release();
 
 			Console.WriteLine($"Download successful.");
 		}
@@ -383,7 +386,7 @@ public partial class App : Application
 		{
 			Console.WriteLine($"Error downloading tile: {ex.Message}");
 		}
-        _ = taskQueue.Release();
+		_ = taskQueue.Release();
 	}
 
 	static async Task DownloadTerrain(double lat, double lon, string version)
@@ -754,13 +757,10 @@ public partial class App : Application
 				int tileWidth = 2048;
 				int tileHeight = totalHeight / rows;
 				Console.WriteLine(cols + " columns, " + rows + " rows, " + tileWidth + "px width, " + tileHeight + "px height");
-				if (totalHeight % rows != 0)
-				{
-					tileHeight += totalHeight % rows;
-				}
-				using var stitched = new SKBitmap(2048 * tilesPerSide, tileHeight * tilesPerSide);
+				if (totalHeight % rows != 0) tileHeight += totalHeight % rows;
+				using SKBitmap stitched = new (2048 * tilesPerSide, tileHeight * tilesPerSide);
 				// Stitch the tiles together
-				using (var canvas = new SKCanvas(stitched))
+				using (SKCanvas canvas = new SKCanvas(stitched))
 				{
 					int count2 = 1;
 					for (int row = tilesPerSide - 1; row >= 0; row--)
@@ -781,22 +781,20 @@ public partial class App : Application
 					using FileStream stream = File.OpenWrite(TempPath + tile + ".jpg");
 					data.SaveTo(stream);
 				}
-				ProcessStartInfo startInfo = new()
-				{
-					FileName = "texconv.exe",
-					Arguments = "-f DXT5 -o \"" + SavePath + "Orthophotos/" + subfolder + "\" -w " + size + " -h " + size + " -y \"" + TempPath + tile + ".jpg\"",
-					RedirectStandardOutput = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
+
+				using Image<Rgba32> imageDDS = SixLabors.ImageSharp.Image.Load<Rgba32>(TempPath + tile + ".jpg");
+
+				BcEncoder encoder = new() {
+					OutputOptions = {
+						Format = CompressionFormat.Bc3,
+						GenerateMipMaps = true,
+						FileFormat = OutputFileFormat.Dds
+					}
 				};
-				using (Process process = new()
-				{ StartInfo = startInfo })
-				{
-					_ = process.Start();
-					string result = process.StandardOutput.ReadToEnd();
-					process.WaitForExit();
-					Console.WriteLine(result);
-				}
+
+				using FileStream fs = File.OpenWrite(SavePath + "Orthophotos/" + subfolder + tile + ".dds");
+				encoder.EncodeToStream(imageDDS, fs);
+
 				File.Delete(TempPath + tile + ".jpg");
 				_ = CurrentTasks.Remove(urlPic);
 			}
@@ -1163,7 +1161,7 @@ public partial class App : Application
 					List<(double, double)> circle = GetTilesWithinRadius(lat, lon, radius);
 					foreach ((double latitude, double longitude) in circle)
 					{
-                        _ = tiles.Add((latitude, longitude));
+						_ = tiles.Add((latitude, longitude));
 					}
 				}
 			}
