@@ -1,5 +1,7 @@
 using System.Numerics;
 
+namespace TerraMaster;
+
 public class GreatCircleInterpolator
 {
     // Convert lat/lon (degrees) to a 3D Cartesian point on the unit sphere
