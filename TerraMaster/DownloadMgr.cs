@@ -15,7 +15,7 @@ public class DownloadMgr
     static readonly HashSet<string> CurrentTasks = [];
     static readonly SemaphoreSlim taskQueue = new(20);
     
-    static async Task DownloadTile(double lat, double lon, int size, string version)
+    public static async Task DownloadTile(double lat, double lon, int size, string version)
 	{
 		await taskQueue.WaitAsync();
 		// This has to ignore SSL certificate errors, because the server is self-signed
@@ -821,7 +821,7 @@ public class DownloadMgr
 		}
 	}
 
-	static async Task DownloadPlan(string filepath, string version, int size, int radius)
+	public static async Task DownloadPlan(string filepath, string version, int size, int radius)
 	{
 		HashSet<(double, double)> tiles = [];
 		if (filepath.EndsWith(".fgfp"))
