@@ -831,12 +831,14 @@ public class DownloadMgr
 			XmlNodeList waypoints = plan.GetElementsByTagName("wp");
 			for (int i = 0; i < waypoints.Count - 1; i++)
 			{
-				int childCountCur = waypoints[i].ChildNodes.Count;
-				double wpCurLat = Convert.ToDouble(waypoints[i].ChildNodes[childCountCur - 2].InnerText);
-				double wpCurLon = Convert.ToDouble(waypoints[i].ChildNodes[childCountCur - 1].InnerText);
-				int childCountNxt = waypoints[i + 1].ChildNodes.Count;
-				double wpNxtLat = Convert.ToDouble(waypoints[i + 1].ChildNodes[childCountNxt - 2].InnerText);
-				double wpNxtLon = Convert.ToDouble(waypoints[i + 1].ChildNodes[childCountNxt - 1].InnerText);
+                XmlDocument currentWp = new();
+                currentWp.LoadXml(waypoints[i].OuterXml);
+                double wpCurLat = double.Parse(currentWp.SelectSingleNode("//lat").InnerText);
+				double wpCurLon = double.Parse(currentWp.SelectSingleNode("//lon").InnerText);
+				XmlDocument nextWp = new();
+                nextWp.LoadXml(waypoints[i + 1].OuterXml);
+                double wpNxtLat = double.Parse(nextWp.SelectSingleNode("//lat").InnerText);
+				double wpNxtLon = double.Parse(nextWp.SelectSingleNode("//lon").InnerText);
 				List<(double, double)> pointsAlongPath = GreatCircleInterpolator.GetGreatCirclePoints(wpCurLat, wpCurLon, wpNxtLat, wpNxtLon, (int)Math.Floor(Util.Haversine(wpCurLat, wpNxtLat, wpCurLon, wpNxtLon)) / 5);
 				Console.WriteLine("Points along path: " + pointsAlongPath.Count);
 				_ = pointsAlongPath.Prepend((wpCurLat, wpCurLon));
