@@ -13,7 +13,7 @@ namespace TerraMaster;
 public class DownloadMgr
 {
     static readonly HashSet<string> CurrentTasks = [];
-    static readonly SemaphoreSlim taskQueue = new(20);
+    static readonly SemaphoreSlim taskQueue = new(50);
     
     public static async Task DownloadTile(double lat, double lon, int size, string version)
 	{
