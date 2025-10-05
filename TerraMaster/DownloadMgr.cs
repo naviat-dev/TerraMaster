@@ -461,7 +461,19 @@ public class DownloadMgr
 					}
 					// Save the stitched image
 					using SKImage image = SKImage.FromBitmap(stitched);
-					using SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
+                    
+                    // Resize the stitched image to be square (width x width)
+                    int squareSize = stitched.Width;
+                    using SKBitmap squareBitmap = new(squareSize, squareSize);
+                    using (SKCanvas squareCanvas = new(squareBitmap))
+                    {
+                        squareCanvas.Clear(SKColors.Black);
+                        // Center the stitched image vertically if needed
+                        int yOffset = (squareSize - stitched.Height) / 2;
+                        squareCanvas.DrawBitmap(stitched, new SKPoint(0, yOffset));
+                    }
+                    using SKImage squareImage = SKImage.FromBitmap(squareBitmap);
+                    using SKData data = squareImage.Encode(SKEncodedImageFormat.Jpeg, 100);
 					using FileStream stream = File.OpenWrite(Util.TempPath + tile + ".jpg");
 					data.SaveTo(stream);
 				}
