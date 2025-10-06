@@ -14,64 +14,60 @@ public class DownloadMgr
 {
     static readonly HashSet<string> CurrentTasks = [];
     static readonly SemaphoreSlim taskQueue = new(50);
+    private static readonly HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
+    public static readonly HttpClient client = new(handler);
     
     public static async Task DownloadTile(double lat, double lon, int size, string version)
-	{
-		await taskQueue.WaitAsync();
-		// This has to ignore SSL certificate errors, because the server is self-signed
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
+    {
+        await taskQueue.WaitAsync();
+        try
+        {
+            try
+            {
+                await DownloadTerrain(lat, lon, version);
+            }
+            catch (HttpRequestException ex)
+            {
+                if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download.");
+                    _ = taskQueue.Release();
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine($"Error downloading terrain data: {ex.Message}");
+                }
+            }
+            await DownloadOrthophoto(lat, lon, size); // There should always be orthophoto data available when there is terrain data, so no try-catch here
+            try
+            {
+                await DownloadObjects(lat, lon);
+            }
+            catch (HttpRequestException ex)
+            {
+                if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Object data not found for tile at {lat}, {lon}. Skipping object download.");
+                    _ = taskQueue.Release();
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine($"Error downloading object data: {ex.Message}");
+                }
+            }
+            await DownloadOSM(lat, lon);
+            _ = taskQueue.Release();
 
-		// Main HTTP request - this is where everything important has to happen
-		using HttpClient client = new(handler);
-
-		try
-		{
-			try
-			{
-				await DownloadTerrain(lat, lon, version);
-			}
-			catch (HttpRequestException ex)
-			{
-				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-				{
-					Console.WriteLine($"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download.");
-					_ = taskQueue.Release();
-					return;
-				}
-				else
-				{
-					Console.WriteLine($"Error downloading terrain data: {ex.Message}");
-				}
-			}
-			await DownloadOrthophoto(lat, lon, size); // There should always be orthophoto data available when there is terrain data, so no try-catch here
-			try
-			{
-				await DownloadObjects(lat, lon);
-			}
-			catch (HttpRequestException ex)
-			{
-				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-				{
-					Console.WriteLine($"Object data not found for tile at {lat}, {lon}. Skipping object download.");
-					_ = taskQueue.Release();
-					return;
-				}
-				else
-				{
-					Console.WriteLine($"Error downloading object data: {ex.Message}");
-				}
-			}
-			await DownloadOSM(lat, lon);
-			_ = taskQueue.Release();
-
-			Console.WriteLine($"Download successful.");
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error downloading tile: {ex.Message}");
-		}
-		_ = taskQueue.Release();
-	}
+            Console.WriteLine($"Download successful.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error downloading tile: {ex.Message}");
+        }
+        _ = taskQueue.Release();
+    }
 
 	static async Task DownloadTerrain(double lat, double lon, string version)
 	{
@@ -81,8 +77,6 @@ public class DownloadMgr
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		string urlStg = Util.TerrServerUrl + version + "/Terrain/" + subfolder + tile + ".stg";
 
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
-		using HttpClient client = new(handler);
 		if (version == "ws2")
 		{
 			string urlBtg = Util.TerrServerUrl + version + "/Terrain/" + subfolder + tile + ".btg.gz"; // Only used in WS2
@@ -293,8 +287,8 @@ public class DownloadMgr
 				{
 					Console.WriteLine("Downloading " + urlVpb + " ...");
 					byte[] vpbBytes = await client.GetByteArrayAsync(urlVpb);
-					await File.WriteAllBytesAsync(Util.TempPath + subfolder[..^1].Split("/")[1] + ".zip", vpbBytes);
-					using FileStream zipStream = File.OpenRead(Util.TempPath + subfolder.Split("/")[1] + ".zip");
+					await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, subfolder[..^1].Split("/")[1] + ".zip"), vpbBytes);
+					using FileStream zipStream = File.OpenRead(Path.Combine(Util.TempPath, subfolder[..^1].Split("/")[1] + ".zip"));
 					using var reader = ReaderFactory.Open(zipStream);
 					while (reader.MoveToNextEntry())
 					{
@@ -333,8 +327,6 @@ public class DownloadMgr
 	{
 		string subfolder = version + "/Airports/" + string.Join("/", code[..^1].ToCharArray());
 		string parent = Util.TerrServerUrl + subfolder;
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
-		using HttpClient client = new(handler);
 		try
 		{
 			HtmlDocument airportParentDir = new();
@@ -380,8 +372,6 @@ public class DownloadMgr
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		double[,] bbox = Util.GetTileBoundingBox(lat, lon);
 		double[,] bboxMercator = { { Math.Log(Math.Tan((90.0 + bbox[0, 0]) * Math.PI / 360.0)) * 6378137, bbox[0, 1] * Math.PI * 6378137 / 180 }, { Math.Log(Math.Tan((90.0 + bbox[1, 0]) * Math.PI / 360.0)) * 6378137, bbox[1, 1] * Math.PI * 6378137 / 180 } };
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
-		using HttpClient client = new(handler);
 		string urlPic = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=" + bboxMercator[0, 1] + "%2C" + bboxMercator[0, 0] + "%2C" + bboxMercator[1, 1] + "%2C" + bboxMercator[1, 0] + "&bboxSR=&layers=&layerDefs=&size=" + size + "%2C" + size + "&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
 		try
 		{
@@ -411,9 +401,8 @@ public class DownloadMgr
 						string urlSubPic = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=" + lonSteps[j] + "%2C" + latSteps[i] + "%2C" + lonSteps[j + 1] + "%2C" + latSteps[i + 1] + "&bboxSR=&layers=&layerDefs=&size=2048%2C2048&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
 						Console.WriteLine("Downloading " + urlSubPic + " ...");
 						byte[] orthoSubBytes = await client.GetByteArrayAsync(urlSubPic);
-						await File.WriteAllBytesAsync(Util.TempPath + tile + "_" + count + ".jpg", orthoSubBytes);
-						Console.WriteLine($"Cropping {Util.TempPath + tile + "_" + count + ".jpg"}: {crop}px from top, {crop}px from bottom");
-						using (var original = SKBitmap.Decode(Util.TempPath + tile + "_" + count + ".jpg"))
+						await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg"), orthoSubBytes);
+						using (var original = SKBitmap.Decode(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg")))
 						{
 							int croppedHeight = original.Height - (crop * 2);
 							var cropped = new SKBitmap(original.Width, croppedHeight);
@@ -429,7 +418,7 @@ public class DownloadMgr
 							// Save or keep in memory for stitching
 							using var image = SKImage.FromBitmap(cropped);
 							using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
-							using var stream = File.OpenWrite(Util.TempPath + tile + "_" + count + ".jpg");
+							using var stream = File.OpenWrite(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg"));
 							data.SaveTo(stream);
 						}
 						count++;
@@ -451,7 +440,7 @@ public class DownloadMgr
 					{
 						for (int col = 0; col < tilesPerSide; col++)
 						{
-							string tilePath = Util.TempPath + tile + "_" + count2 + ".jpg";
+							string tilePath = Path.Combine(Util.TempPath, tile + "_" + count2 + ".jpg");
 							using SKBitmap subTile = SKBitmap.Decode(tilePath);
 							canvas.DrawBitmap(subTile, new SKPoint(col * 2048, row * tileHeight));
 							count2++;
@@ -461,7 +450,7 @@ public class DownloadMgr
 					}
 					// Save the stitched image
 					using SKImage image = SKImage.FromBitmap(stitched);
-                    
+
                     // Resize the stitched image to be square (width x width)
                     int squareSize = stitched.Width;
                     using SKBitmap squareBitmap = new(squareSize, squareSize);
@@ -474,11 +463,11 @@ public class DownloadMgr
                     }
                     using SKImage squareImage = SKImage.FromBitmap(squareBitmap);
                     using SKData data = squareImage.Encode(SKEncodedImageFormat.Jpeg, 100);
-					using FileStream stream = File.OpenWrite(Util.TempPath + tile + ".jpg");
+					using FileStream stream = File.OpenWrite(Path.Combine(Util.TempPath, tile + ".jpg"));
 					data.SaveTo(stream);
 				}
 
-				using Image<Rgba32> imageDDS = SixLabors.ImageSharp.Image.Load<Rgba32>(Util.TempPath + tile + ".jpg");
+				using Image<Rgba32> imageDDS = SixLabors.ImageSharp.Image.Load<Rgba32>(Path.Combine(Util.TempPath, tile + ".jpg"));
 
 				BcEncoder encoder = new() {
 					OutputOptions = {
@@ -491,7 +480,7 @@ public class DownloadMgr
 				using FileStream fs = File.OpenWrite(Util.SavePath + "Orthophotos/" + subfolder + tile + ".dds");
 				encoder.EncodeToStream(imageDDS, fs);
 
-				File.Delete(Util.TempPath + tile + ".jpg");
+				File.Delete(Path.Combine(Util.TempPath, tile + ".jpg"));
 				_ = CurrentTasks.Remove(urlPic);
 			}
 		}
@@ -509,8 +498,6 @@ public class DownloadMgr
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		string urlObj = Util.TerrServerUrl + "ws2/Objects/" + subfolder + tile + ".stg";
 
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
-		using HttpClient client = new(handler);
 		if (CurrentTasks.Add(urlObj))
 		{
 			try
@@ -643,8 +630,6 @@ public class DownloadMgr
 		string urlPylons = Util.TerrServerUrl + "osm2city/Pylons/" + subfolder + ".txz";
 		string urlRoads = Util.TerrServerUrl + "osm2city/Roads/" + subfolder + ".txz";
 		string urlTrees = Util.TerrServerUrl + "osm2city/Trees/" + subfolder + ".txz";
-		HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
-		using HttpClient client = new(handler);
 		client.Timeout = new TimeSpan(0, 10, 0);
 		if (CurrentTasks.Add(urlBuildings))
 		{
