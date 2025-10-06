@@ -3,8 +3,8 @@ namespace TerraMaster;
 public class Util
 {
     public static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
-    public static readonly string SavePath = "C:/Users/User/Documents/Aviation/scenery-test/";
-	public static readonly string TempPath = Path.GetTempPath() + "terramaster/";
+    public static readonly string SavePath = "C:\\Users\\User\\Documents\\Aviation\\scenery-test\\";
+	public static readonly string TempPath = Path.GetTempPath() + "terramaster";
 	public static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	public static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	public static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
