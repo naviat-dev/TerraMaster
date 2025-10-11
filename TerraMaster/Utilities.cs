@@ -2,40 +2,40 @@ namespace TerraMaster;
 
 public class Util
 {
-    public static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
-    public static readonly string SavePath = "C:\\Users\\User\\Documents\\Aviation\\scenery-test\\";
+	public static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
+	public static readonly string SavePath = "C:\\Users\\User\\Documents\\Aviation\\scenery-test\\";
 	public static readonly string TempPath = Path.GetTempPath() + "terramaster";
 	public static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	public static readonly string TerrServerUrl = "https://terramaster.flightgear.org/terrasync/";
 	public static readonly string[] Ws2ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws2/", "https://flightgear.sourceforge.net/scenery/", "https://de1mirror.flightgear.org/ws2/"];
 	public static readonly string[] Ws3ServerUrls = ["https://terramaster.flightgear.org/terrasync/ws3/", "https://de1mirror.flightgear.org/ws3/"];
-	public static readonly int OrthoRes = 2048;
-    public static int GetTileIndex(double lat, double lon)
-    {
-        if (Math.Abs(lat) > 90 || Math.Abs(lon) > 180)
-        {
-            Console.WriteLine("Latitude or longitude out of range");
-            return 0;
-        }
-        else
-        {
-            double lookup = Math.Abs(lat);
-            double tileWidth = 0;
-            for (int i = 0; i < LatitudeIndex.Length; i++)
-            {
-                if (lookup >= LatitudeIndex[i, 0])
-                {
-                    tileWidth = LatitudeIndex[i, 1];
-                    break;
-                }
-            }
-            int baseX = (int)Math.Floor(Math.Floor(lon / tileWidth) * tileWidth);
-            int x = (int)Math.Floor((lon - baseX) / tileWidth);
-            int baseY = (int)Math.Floor(lat);
-            int y = (int)Math.Truncate((lat - baseY) * 8);
-            return ((baseX + 180) << 14) + ((baseY + 90) << 6) + (y << 3) + x;
-        }
-    }
+	public static readonly int OrthoRes = 4096;
+	public static int GetTileIndex(double lat, double lon)
+	{
+		if (Math.Abs(lat) > 90 || Math.Abs(lon) > 180)
+		{
+			Console.WriteLine("Latitude or longitude out of range");
+			return 0;
+		}
+		else
+		{
+			double lookup = Math.Abs(lat);
+			double tileWidth = 0;
+			for (int i = 0; i < LatitudeIndex.Length; i++)
+			{
+				if (lookup >= LatitudeIndex[i, 0])
+				{
+					tileWidth = LatitudeIndex[i, 1];
+					break;
+				}
+			}
+			int baseX = (int)Math.Floor(Math.Floor(lon / tileWidth) * tileWidth);
+			int x = (int)Math.Floor((lon - baseX) / tileWidth);
+			int baseY = (int)Math.Floor(lat);
+			int y = (int)Math.Truncate((lat - baseY) * 8);
+			return ((baseX + 180) << 14) + ((baseY + 90) << 6) + (y << 3) + x;
+		}
+	}
 
 	public static (double lat, double lon) GetLatLon(int tileIndex)
 	{
@@ -68,7 +68,7 @@ public class Util
 	/// <returns>
 	/// A 2x2 array, where the first element is the bottom left corner, and the second element is the top right corner.
 	/// </returns>
-	public static double[,] GetTileBoundingBox(double lat, double lon)
+	public static double[,] GetTileBounds(double lat, double lon)
 	{
 		double[,] bbox = { { 0, 0 }, { 0, 0 } };
 
@@ -100,7 +100,7 @@ public class Util
 	{
 		List<(double, double)> result = [];
 
-		double[,] tileBox = GetTileBoundingBox(lat, lon);
+		double[,] tileBox = GetTileBounds(lat, lon);
 		double tileCenterLat = (tileBox[0, 0] + tileBox[1, 0]) / 2;
 		double tileCenterLon = (tileBox[0, 1] + tileBox[1, 1]) / 2;
 
@@ -124,7 +124,7 @@ public class Util
 			}
 			for (double j = lonMin; j <= lonMax; j += step)
 			{
-				double[,] currentTileBox = GetTileBoundingBox(i, j);
+				double[,] currentTileBox = GetTileBounds(i, j);
 				double currentCenterLat = (currentTileBox[0, 0] + currentTileBox[1, 0]) / 2;
 				double currentCenterLon = (currentTileBox[0, 1] + currentTileBox[1, 1]) / 2;
 				if (Haversine(currentCenterLat, tileCenterLat, currentCenterLon, tileCenterLon) <= radiusMiles)

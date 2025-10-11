@@ -21,7 +21,6 @@ window.onload = async () => {
 	const largeTilesDS = new Cesium.CustomDataSource("largeTiles");
 	const smallTilesGrp = [];
 
-	// viewer.dataSources.add(smallTilesDS);
 	viewer.dataSources.add(largeTilesDS);
 	for (var i = -90; i < 90; i += 10) {
 		for (var j = -180; j < 180; j += 10) {
@@ -97,6 +96,7 @@ window.onload = async () => {
 				boundsSPrev = boundsSCur;
 				boundsEPrev = boundsECur;
 				boundsWPrev = boundsWCur;
+				// This metric works in theory, but I should use the viewbox size instead of camera altitude
 				if (alt < 2000000) {
 					// Show smaller tiles and hide larger tiles
 					if (tileSize) {
