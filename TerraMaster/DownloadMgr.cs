@@ -394,8 +394,8 @@ public class DownloadMgr
 				// Even if the tile is smaller than 2048px, this should still work fine
 				for (int i = 0; i < latSteps.Length - 1; i++)
 				{
-					int curHeight = 2048 - (int)Math.Abs(stepLat / stepLon * 2048);
-					totalHeight += 2048 - curHeight;
+					int curHeight = (int)Math.Abs(stepLat / stepLon * 2048);
+					totalHeight += curHeight;
 					for (int j = 0; j < lonSteps.Length - 1; j++)
 					{
 						string urlSubPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={lonSteps[j]}%2C{latSteps[i]}%2C{lonSteps[j + 1]}%2C{latSteps[i + 1]}&bboxSR=&layers=&layerDefs=&size=2048%2C{curHeight}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
