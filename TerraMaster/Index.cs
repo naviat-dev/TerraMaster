@@ -54,7 +54,7 @@ public class Index
 				bool isUpToDate = true;
 				try
 				{
-					isUpToDate = IsTileUpToDate(url);
+					isUpToDate = IsUrlUpToDate(url);
 				}
 				catch (Exception) {}
 
@@ -63,11 +63,11 @@ public class Index
 					string[] tokens = line.Split(' ');
 					if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
 					{
-						isUpToDate = isUpToDate && IsTileUpToDate(url.Replace(fileName, tokens[1]));
+						isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
 					}
 					else if (tokens[0] == "OBJECT_SHARED")
 					{
-						isUpToDate = isUpToDate && IsTileUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
+						isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
 					}
 				}
 				tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
@@ -94,7 +94,7 @@ public class Index
 		return dirindex;
 	}
 
-	public static bool IsTileUpToDate(string url)
+	public static bool IsUrlUpToDate(string url)
 	{
 		string fileName = url.Replace(Util.TerrServerUrl, Util.SavePath).Replace("/", "\\");
 		if (!File.Exists(fileName))
@@ -144,13 +144,13 @@ public class Index
 		};
 	}
 
-	private static List<int> GetTileNeighbors(int tileId)
+	private static HashSet<int> GetTileNeighbors(int tileId)
 	{
-		List<int> neighbors = [];
+		HashSet<int> neighbors = [];
 		neighbors.Add(tileId); // West
 		var (lat, lon) = Util.GetLatLon(tileId);
 		double[,] tileBounds = Util.GetTileBounds(lat, lon);
-		int widthIntervals = (int)(tileBounds[0, 0] - tileBounds[0, 1] / 0.125);
+		int widthIntervals = (int)((tileBounds[0, 0] - tileBounds[0, 1]) / 0.125);
 		return neighbors;
 	}
 }
