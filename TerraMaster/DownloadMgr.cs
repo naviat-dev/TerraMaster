@@ -372,7 +372,7 @@ public class DownloadMgr
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		double[,] bbox = Util.GetTileBounds(lat, lon);
 		double[,] bboxMercator = { { Math.Log(Math.Tan((90.0 + bbox[0, 0]) * Math.PI / 360.0)) * 6378137, bbox[0, 1] * Math.PI * 6378137 / 180 }, { Math.Log(Math.Tan((90.0 + bbox[1, 0]) * Math.PI / 360.0)) * 6378137, bbox[1, 1] * Math.PI * 6378137 / 180 } };
-		string urlPic = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=" + bboxMercator[0, 1] + "%2C" + bboxMercator[0, 0] + "%2C" + bboxMercator[1, 1] + "%2C" + bboxMercator[1, 0] + "&bboxSR=&layers=&layerDefs=&size=" + size + "%2C" + size + "&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
+		string urlPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={ bboxMercator[0, 1]}%2C{bboxMercator[0, 0]}%2C{bboxMercator[1, 1]}%2C{bboxMercator[1, 0]}&bboxSR=&layers=&layerDefs=&size={size}=%2C{size}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
 		try
 		{
 			if (CurrentTasks.Add(urlPic))
@@ -394,33 +394,14 @@ public class DownloadMgr
 				// Even if the tile is smaller than 2048px, this should still work fine
 				for (int i = 0; i < latSteps.Length - 1; i++)
 				{
-					int crop = (2048 - (int)Math.Abs(stepLat / stepLon * 2048)) / 2;
-					totalHeight += 2048 - (crop * 2);
+					int curHeight = 2048 - (int)Math.Abs(stepLat / stepLon * 2048);
+					totalHeight += 2048 - curHeight;
 					for (int j = 0; j < lonSteps.Length - 1; j++)
 					{
-						string urlSubPic = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=" + lonSteps[j] + "%2C" + latSteps[i] + "%2C" + lonSteps[j + 1] + "%2C" + latSteps[i + 1] + "&bboxSR=&layers=&layerDefs=&size=2048%2C2048&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
+						string urlSubPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={lonSteps[j]}%2C{latSteps[i]}%2C{lonSteps[j + 1]}%2C{latSteps[i + 1]}&bboxSR=&layers=&layerDefs=&size=2048%2C{curHeight}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
 						Console.WriteLine("Downloading " + urlSubPic + " ...");
 						byte[] orthoSubBytes = await client.GetByteArrayAsync(urlSubPic);
 						await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg"), orthoSubBytes);
-						using (var original = SKBitmap.Decode(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg")))
-						{
-							int croppedHeight = original.Height - (crop * 2);
-							var cropped = new SKBitmap(original.Width, croppedHeight);
-							using (var canvas = new SKCanvas(cropped))
-							{
-								// Draw the central part of the original image into the cropped bitmap
-								canvas.DrawBitmap(
-									original,
-									new SKRect(0, crop, original.Width, crop + croppedHeight), // source rect
-									new SKRect(0, 0, original.Width, croppedHeight)                  // dest rect
-								);
-							}
-							// Save or keep in memory for stitching
-							using var image = SKImage.FromBitmap(cropped);
-							using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
-							using var stream = File.OpenWrite(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg"));
-							data.SaveTo(stream);
-						}
 						count++;
 					}
 				}
@@ -433,7 +414,7 @@ public class DownloadMgr
 				if (totalHeight % rows != 0) tileHeight += totalHeight % rows;
 				using SKBitmap stitched = new(2048 * tilesPerSide, tileHeight * tilesPerSide);
 				// Stitch the tiles together
-				using (SKCanvas canvas = new SKCanvas(stitched))
+				using (SKCanvas canvas = new(stitched))
 				{
 					int count2 = 1;
 					for (int row = tilesPerSide - 1; row >= 0; row--)
