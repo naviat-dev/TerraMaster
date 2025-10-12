@@ -21,7 +21,7 @@ public class Settings
     {
         if (!settings.ContainsKey(section))
         {
-            settings[section] = new Dictionary<string, string>();
+            settings[section] = [];
         }
         settings[section][key] = value;
     }

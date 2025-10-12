@@ -46,15 +46,15 @@ public class GreatCircleInterpolator
     // Main method to get points along the great circle
     public static List<(double lat, double lon)> GetGreatCirclePoints(double lat1, double lon1, double lat2, double lon2, int numPoints)
     {
-        var p0 = LatLonToVector(lat1, lon1);
-        var p1 = LatLonToVector(lat2, lon2);
+        Vector3 p0 = LatLonToVector(lat1, lon1);
+        Vector3 p1 = LatLonToVector(lat2, lon2);
 
-        var result = new List<(double, double)>();
+        List<(double, double)> result = [];
 
         for (int i = 0; i < numPoints; i++)
         {
             double t = (double)i / (numPoints - 1);
-            var pi = Slerp(p0, p1, t);
+            Vector3 pi = Slerp(p0, p1, t);
             result.Add(VectorToLatLon(pi));
         }
 

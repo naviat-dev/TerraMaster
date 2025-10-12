@@ -8,7 +8,7 @@ internal class Program
     {
         App.InitializeLogging();
 
-        var host = UnoPlatformHostBuilder.Create()
+        UnoPlatformHost host = UnoPlatformHostBuilder.Create()
             .App(() => new App())
             .UseX11()
             .UseLinuxFrameBuffer()

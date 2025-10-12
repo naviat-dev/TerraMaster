@@ -14,10 +14,10 @@ public static class Cesium
 	public static async Task StartAsync()
 	{
 		MainPage.RaiseLoadingChanged("Starting Cesium server...");
-		var builder = WebApplication.CreateBuilder();
+		WebApplicationBuilder builder = WebApplication.CreateBuilder();
 		_ = builder.WebHost.UseUrls(Url);
 
-		var app = builder.Build();
+		WebApplication app = builder.Build();
 
 		_ = app.UseStaticFiles(new StaticFileOptions
 		{
@@ -38,7 +38,7 @@ public static class Cesium
 			context.Response.Headers.Pragma = "no-cache";
 			context.Response.Headers.Expires = "0";
 			
-			var htmlPath = Path.Combine(app.Environment.ContentRootPath, "Assets", "cesium.js.html");
+			string htmlPath = Path.Combine(app.Environment.ContentRootPath, "Assets", "cesium.js.html");
 			if (File.Exists(htmlPath))
 			{
 				await context.Response.SendFileAsync(htmlPath, 0, null, context.RequestAborted);

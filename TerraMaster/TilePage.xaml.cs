@@ -9,7 +9,7 @@ public sealed partial class TilePage : Page
 		MyWebView.Source = new Uri("http://localhost:5005/");
 		MyWebView.WebMessageReceived += (s, e) =>
 		{
-			var message = e.WebMessageAsJson;
+			string message = e.WebMessageAsJson;
 			Console.WriteLine("[JS: " + message + "]");
 		};
 	}
