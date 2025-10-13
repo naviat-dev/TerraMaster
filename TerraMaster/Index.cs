@@ -25,28 +25,24 @@ public struct Polygon
 public class Index
 {
 	public static Dictionary<int, TileRecord> tiles = [];
-	public static void IndexAllTiles()
+	public static void IndexAllTiles(bool deep)
 	{
-		// Let's make a directory to hold the files that we're getting version data from.
-		// If we already have a file here, we shouldn't need to update it while the check is running.
+		tiles.Clear();
+		_ = IndexTerrain(deep);
+		_ = IndexObjects(deep);
+		// IndexOrtho(deep);
+	}
+
+	public static async Task IndexTerrain(bool deep)
+	{
 		if (!Directory.Exists(Path.Combine(Util.TempPath, "sync")))
 		{
 			Directory.CreateDirectory(Path.Combine(Util.TempPath, "sync"));
 		}
 
-		// Look recursively through the scenery directory for terrain, object, ortho and OSM files/folders
-		string terrainPath = Path.Combine(Util.SavePath, "ws2", "Terrain");
-		string objectPath = Path.Combine(Util.SavePath, "Object");
-		string orthoPath = Path.Combine(Util.SavePath, "Orthophotos");
-		string buildingsPath = Path.Combine(Util.SavePath, "Buildings");
-		string detailsPath = Path.Combine(Util.SavePath, "Details");
-		string pylonsPath = Path.Combine(Util.SavePath, "Pylons");
-		string roadsPath = Path.Combine(Util.SavePath, "Roads");
-		string treesPath = Path.Combine(Util.SavePath, "Trees");
-
-		foreach (string file in Directory.GetFiles(terrainPath, "*", SearchOption.AllDirectories))
+		foreach (string file in Directory.GetFiles(Path.Combine(Util.SavePath, "ws2", "Terrain"), "*", SearchOption.AllDirectories))
 		{
-			if (file.EndsWith(".stg"))
+			if (file.EndsWith(".stg") || (file.EndsWith(".btg.gz") && !deep))
 			{
 				string fileName = Path.GetFileName(file);
 				string[] terrainLines = File.ReadAllLines(file);
@@ -56,18 +52,21 @@ public class Index
 				{
 					isUpToDate = IsUrlUpToDate(url);
 				}
-				catch (Exception) {}
+				catch (Exception) { }
 
-				foreach (string line in terrainLines) // Check all subrecords to make sure that they're up-to-date as well
+				if (deep)
 				{
-					string[] tokens = line.Split(' ');
-					if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
+					foreach (string line in terrainLines) // Check all subrecords to make sure that they're up-to-date as well
 					{
-						isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
-					}
-					else if (tokens[0] == "OBJECT_SHARED")
-					{
-						isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
+						string[] tokens = line.Split(' ');
+						if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
+						{
+							isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
+						}
+						else if (tokens[0] == "OBJECT_SHARED")
+						{
+							isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
+						}
 					}
 				}
 				tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
@@ -80,6 +79,54 @@ public class Index
 			}
 		}
 	}
+	
+	public static async Task IndexObjects(bool deep)
+    {
+        if (!Directory.Exists(Path.Combine(Util.TempPath, "sync")))
+		{
+			Directory.CreateDirectory(Path.Combine(Util.TempPath, "sync"));
+		}
+
+		foreach (string file in Directory.GetFiles(Path.Combine(Util.SavePath, "Objects"), "*", SearchOption.AllDirectories))
+		{
+			if (file.EndsWith(".stg"))
+			{
+				string fileName = Path.GetFileName(file);
+				string[] objectLines = File.ReadAllLines(file);
+				string url = (Util.TerrServerUrl + "ws2/" + file.Replace(Util.SavePath, "")).Replace("\\", "/");
+				Console.WriteLine(url);
+				bool isUpToDate = true;
+				try
+				{
+					isUpToDate = IsUrlUpToDate(url);
+				}
+				catch (Exception) { }
+
+				if (deep)
+				{
+					foreach (string line in objectLines) // Check all subrecords to make sure that they're up-to-date as well
+					{
+						string[] tokens = line.Split(' ');
+						if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
+						{
+							isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
+						}
+						else if (tokens[0] == "OBJECT_SHARED")
+						{
+							isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
+						}
+					}
+				}
+				tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
+				{
+					type = "objects",
+					latestVersion = isUpToDate,
+					url = url,
+					path = file
+				});
+			}
+		}
+    }
 
 	private static Dictionary<string, string> GetDirindex(string path)
 	{
@@ -135,7 +182,7 @@ public class Index
 		List<TileRecord> categoryTiles;
 		if (type == "update")
 		{
-			categoryTiles = tiles.Values.Where(t => t.type == type && !t.latestVersion).ToList();
+			categoryTiles = [.. tiles.Values.Where(t => t.type == type && !t.latestVersion)];
 		}
 		return new UpdateCategory
 		{
@@ -144,13 +191,27 @@ public class Index
 		};
 	}
 
-	private static HashSet<int> GetTileNeighbors(int tileId)
+	private static HashSet<int> GetTileNeighbors(int tileId, HashSet<int> checkedTiles)
 	{
 		HashSet<int> neighbors = [];
 		neighbors.Add(tileId); // West
 		var (lat, lon) = Util.GetLatLon(tileId);
 		double[,] tileBounds = Util.GetTileBounds(lat, lon);
 		int widthIntervals = (int)((tileBounds[0, 0] - tileBounds[0, 1]) / 0.125);
+		HashSet<int> nextTilesToCheck = [];
+		for (int i = -1; i <= 1; i++)
+		{
+			for (int j = -1; j <= widthIntervals; j++)
+			{
+				double checkLat = lat + (i * 0.125);
+				double checkLon = lon + (j * 0.125);
+				if (Math.Abs(checkLat) <= 90 && Math.Abs(checkLon) <= 180 && !checkedTiles.Contains(Util.GetTileIndex(checkLat, checkLon)))
+					continue;
+				nextTilesToCheck.Add(Util.GetTileIndex(checkLat, checkLon));
+			}
+			lon += 0.125;
+			nextTilesToCheck.Add(Util.GetTileIndex(lat, lon));
+		}
 		return neighbors;
 	}
 }
