@@ -372,7 +372,7 @@ public class DownloadMgr
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0') + "/";
 		double[,] bbox = Util.GetTileBounds(lat, lon);
 		double[,] bboxMercator = { { Math.Log(Math.Tan((90.0 + bbox[0, 0]) * Math.PI / 360.0)) * 6378137, bbox[0, 1] * Math.PI * 6378137 / 180 }, { Math.Log(Math.Tan((90.0 + bbox[1, 0]) * Math.PI / 360.0)) * 6378137, bbox[1, 1] * Math.PI * 6378137 / 180 } };
-		string urlPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={ bboxMercator[0, 1]}%2C{bboxMercator[0, 0]}%2C{bboxMercator[1, 1]}%2C{bboxMercator[1, 0]}&bboxSR=&layers=&layerDefs=&size={size}=%2C{size}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
+		string urlPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={bboxMercator[0, 1]}%2C{bboxMercator[0, 0]}%2C{bboxMercator[1, 1]}%2C{bboxMercator[1, 0]}&bboxSR=&layers=&layerDefs=&size={size}=%2C{size}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
 		try
 		{
 			if (CurrentTasks.Add(urlPic))
@@ -401,7 +401,7 @@ public class DownloadMgr
 						string urlSubPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={lonSteps[j]}%2C{latSteps[i]}%2C{lonSteps[j + 1]}%2C{latSteps[i + 1]}&bboxSR=&layers=&layerDefs=&size=2048%2C{curHeight}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
 						Console.WriteLine("Downloading " + urlSubPic + " ...");
 						byte[] orthoSubBytes = await client.GetByteArrayAsync(urlSubPic);
-						await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, tile + "_" + count + ".jpg"), orthoSubBytes);
+						await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, tile + (size > 2048 ? "_" + count : "") + ".jpg"), orthoSubBytes);
 						count++;
 					}
 				}
@@ -416,18 +416,25 @@ public class DownloadMgr
 				// Stitch the tiles together
 				using (SKCanvas canvas = new(stitched))
 				{
-					int count2 = 1;
-					for (int row = tilesPerSide - 1; row >= 0; row--)
+					if (size > 2048)
 					{
-						for (int col = 0; col < tilesPerSide; col++)
+						int count2 = 1;
+						for (int row = tilesPerSide - 1; row >= 0; row--)
 						{
-							string tilePath = Path.Combine(Util.TempPath, tile + "_" + count2 + ".jpg");
-							using SKBitmap subTile = SKBitmap.Decode(tilePath);
-							canvas.DrawBitmap(subTile, new SKPoint(col * 2048, row * tileHeight));
-							count2++;
-							// Delete the sub-tile after stitching
-							File.Delete(tilePath);
+							for (int col = 0; col < tilesPerSide; col++)
+							{
+								string tilePath = Path.Combine(Util.TempPath, tile + "_" + count2 + ".jpg");
+								using SKBitmap subTile = SKBitmap.Decode(tilePath);
+								canvas.DrawBitmap(subTile, new SKPoint(col * 2048, row * tileHeight));
+								count2++;
+								// Delete the sub-tile after stitching
+								File.Delete(tilePath);
+							}
 						}
+					} else {
+						string tilePath = Path.Combine(Util.TempPath, tile + ".jpg");
+						using SKBitmap subTile = SKBitmap.Decode(tilePath);
+						canvas.DrawBitmap(subTile, new SKPoint(0, 0));
 					}
 					// Save the stitched image
 					using SKImage image = SKImage.FromBitmap(stitched);
@@ -437,10 +444,10 @@ public class DownloadMgr
 					using SKBitmap squareBitmap = new(squareSize, squareSize);
 					using (SKCanvas squareCanvas = new(squareBitmap))
 					{
-						squareCanvas.Clear(SKColors.Black);
-						// Center the stitched image vertically if needed
-						int yOffset = (squareSize - stitched.Height) / 2;
-						squareCanvas.DrawBitmap(stitched, new SKPoint(0, yOffset));
+						// Stretch the stitched image to fill the entire square bitmap
+						var sourceRect = new SKRect(0, 0, stitched.Width, stitched.Height);
+						var destRect = new SKRect(0, 0, squareSize, squareSize);
+						squareCanvas.DrawBitmap(stitched, sourceRect, destRect);
 					}
 					using SKImage squareImage = SKImage.FromBitmap(squareBitmap);
 					using SKData data = squareImage.Encode(SKEncodedImageFormat.Jpeg, 100);
