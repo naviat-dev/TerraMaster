@@ -1,11 +1,11 @@
 namespace TerraMaster;
 
-public sealed partial class MainPage : Page
+public sealed partial class LoadingPage : Page
 {
 	public static event Action<string> LoadingChanged;
 	public static string ErrorMessage;
 
-	public MainPage()
+	public LoadingPage()
 	{
 
 		InitializeComponent();
