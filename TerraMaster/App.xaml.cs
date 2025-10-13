@@ -114,11 +114,6 @@ public partial class App : Application
 			_ = Directory.CreateDirectory(Util.TempPath);
 			MainPage.RaiseLoadingChanged("Creating temp directory...");
 		}
-		foreach (var (lat, lon) in Util.GetTilesWithinRadius(65.120368, -17.819116, 500))
-		{
-			// DownloadMgr.DownloadTile(lat, lon, Util.OrthoRes, "ws2");
-		}
-		Index.IndexAllTiles();
-		// DownloadMgr.DownloadPlan("C:/Users/User/Downloads/temp.fgfp", "ws2", Util.OrthoRes, 100);
+		DownloadMgr.client.Timeout = new TimeSpan(0, 10, 0);
 	}
 }
