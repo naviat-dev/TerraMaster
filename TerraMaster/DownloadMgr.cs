@@ -431,7 +431,9 @@ public class DownloadMgr
 								File.Delete(tilePath);
 							}
 						}
-					} else {
+					}
+					else
+					{
 						string tilePath = Path.Combine(Util.TempPath, tile + ".jpg");
 						using SKBitmap subTile = SKBitmap.Decode(tilePath);
 						canvas.DrawBitmap(subTile, new SKPoint(0, 0));
