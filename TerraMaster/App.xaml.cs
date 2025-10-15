@@ -43,7 +43,10 @@ public partial class App : Application
 			// When the navigation stack isn't restored navigate to the first page,
 			// configuring the new page by passing required information as a navigation
 			// parameter
-			rootFrame.Navigate(typeof(LoadingPage), args.Arguments);
+			if (File.Exists(Util.ConfigPath))
+				_ = rootFrame.Navigate(typeof(LoadingPage), args.Arguments);
+			else
+				_ = rootFrame.Navigate(typeof(SetupPage), args.Arguments);
 		}
 
 		// Ensure the current window is active

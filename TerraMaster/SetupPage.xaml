@@ -1,0 +1,57 @@
+<Page
+	x:Class="TerraMaster.SetupPage"
+	x:Name="PageBackground"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="using:TerraMaster">
+	<Page.Background>
+		<RadialGradientBrush x:Name="MyRadialGradient"
+							 Center="0,1"
+							 RadiusX="1"
+							 RadiusY="1">
+			<GradientStop x:Name="GradientStart"
+						  Color="#FF023264"
+						  Offset="0"/>
+			<GradientStop x:Name="GradientEnd"
+						  Color="#00023264"
+						  Offset="1"/>
+		</RadialGradientBrush>
+	</Page.Background>
+	<Grid x:Name="MainGrid"
+		  HorizontalAlignment="Left"
+		  VerticalAlignment="Center">
+		<Grid.RenderTransform>
+			<TranslateTransform x:Name="MainTransform"/>
+		</Grid.RenderTransform>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<TextBlock Grid.Row="0"
+				   x:Name="setupTitle"
+				   Text="Welcome to TerraMaster"
+				   FontFamily="ms-appx:///Assets/Fonts/bahnschrift.ttf#Bahnschrift"
+				   FontSize="60"
+				   Margin="20"
+				   HorizontalAlignment="Left"
+				   VerticalAlignment="Center"/>
+		<TextBlock Grid.Row="1"
+				   x:Name="setupBody"
+				   Text="Just a few more steps to get you started."
+				   FontFamily="ms-appx:///Assets/Fonts/bahnschrift.ttf#Bahnschrift"
+				   FontSize="25"
+				   Margin="20"
+				   HorizontalAlignment="Left"
+				   VerticalAlignment="Center"/>
+		<Button Grid.Row="2"
+				x:Name="startSetupButton"
+				Content="->"
+				FontFamily="ms-appx:///Assets/Fonts/bahnschrift.ttf#Bahnschrift"
+				FontSize="18"
+				Margin="20"
+				HorizontalAlignment="Left"
+				VerticalAlignment="Center"
+				Click="NextPage"/>
+	</Grid>
+</Page>
