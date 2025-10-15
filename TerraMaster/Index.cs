@@ -25,6 +25,8 @@ public struct Polygon
 public class Index
 {
 	public static Dictionary<int, TileRecord> tiles = [];
+	public static int QueuedTiles { get; private set; } = 0;
+	public static int ProcessedTiles { get; private set; } = 0;
 	public static void IndexAllTiles(bool deep)
 	{
 		tiles.Clear();
@@ -42,6 +44,7 @@ public class Index
 
 		string[] stgFiles = [.. Directory.GetFiles(Path.Combine(Util.SavePath, "Terrain"), "*", SearchOption.AllDirectories).Where(f => f.EndsWith(".stg"))];
 		string[] btgFiles = [.. Directory.GetFiles(Path.Combine(Util.SavePath, "Terrain"), "*", SearchOption.AllDirectories).Where(f => f.EndsWith(".btg.gz"))];
+		QueuedTiles += deep ? stgFiles.Length + btgFiles.Length : stgFiles.Length;
 		foreach (string file in deep ? stgFiles.Concat(btgFiles) : stgFiles)
 		{
 			string fileName = Path.GetFileName(file);
@@ -76,6 +79,7 @@ public class Index
 				url = url,
 				path = file
 			});
+			ProcessedTiles++;
 		}
 	}
 
@@ -87,6 +91,7 @@ public class Index
 		}
 
 		string[] stgFiles = [.. Directory.GetFiles(Path.Combine(Util.SavePath, "Objects"), "*", SearchOption.AllDirectories).Where(f => f.EndsWith(".stg"))];
+		QueuedTiles += stgFiles.Length;
 		foreach (string file in stgFiles)
 		{
 			string fileName = Path.GetFileName(file);
@@ -122,6 +127,7 @@ public class Index
 				url = url,
 				path = file
 			});
+			ProcessedTiles++;
 		}
 	}
 
