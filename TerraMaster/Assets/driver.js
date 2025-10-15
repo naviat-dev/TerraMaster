@@ -8,6 +8,12 @@ console.error = (msg) => {
 	window.chrome.webview.postMessage("ERR:" + msg);
 };
 
+async function getTileIndex(lat, lon) {
+    const response = await fetch(`/api/tileindex/${lat}/${lon}`);
+    const data = await response.json();
+    return data.tileIndex;
+}
+
 window.onload = async () => {
 	Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3MzQ5YzdiZS04OThlLTQ3YmMtODQ4ZS04MGJiNDZjYWNkNWQiLCJpZCI6MzEyNjkyLCJpYXQiOjE3NTAwODU1OTB9.vNCpYChTSQNmCN9s440YOJIMOOQXIWy4hB9m4LhAQlY';
 

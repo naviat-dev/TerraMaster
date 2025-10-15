@@ -8,7 +8,7 @@ namespace TerraMaster;
 
 public static class Cesium
 {
-	private static IHost _host;
+	private static IHost? _host;
 	public static string Url { get; private set; } = "http://localhost:5005";
 
 	public static async Task StartAsync()
@@ -28,6 +28,14 @@ public static class Cesium
 				ctx.Context.Response.Headers.Pragma = "no-cache";
 				ctx.Context.Response.Headers.Expires = "0";
 			}
+		});
+
+		// API endpoints for JavaScript to call C# functions
+
+		_ = app.MapGet("/api/tileindex/{lat:double}/{lon:double}", (double lat, double lon) =>
+		{
+			int tileIndex = Util.GetTileIndex(lat, lon);
+			return Results.Json(new { tileIndex = tileIndex });
 		});
 
 		// Optionally, serve cesium.js.html at root
