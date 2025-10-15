@@ -40,93 +40,90 @@ public class Index
 			Directory.CreateDirectory(Path.Combine(Util.TempPath, "sync"));
 		}
 
-		foreach (string file in Directory.GetFiles(Path.Combine(Util.SavePath, "ws2", "Terrain"), "*", SearchOption.AllDirectories))
+		string[] stgFiles = [.. Directory.GetFiles(Path.Combine(Util.SavePath, "Terrain"), "*", SearchOption.AllDirectories).Where(f => f.EndsWith(".stg"))];
+		string[] btgFiles = [.. Directory.GetFiles(Path.Combine(Util.SavePath, "Terrain"), "*", SearchOption.AllDirectories).Where(f => f.EndsWith(".btg.gz"))];
+		foreach (string file in deep ? stgFiles.Concat(btgFiles) : stgFiles)
 		{
-			if (file.EndsWith(".stg") || (file.EndsWith(".btg.gz") && !deep))
+			string fileName = Path.GetFileName(file);
+			string[] terrainLines = File.ReadAllLines(file);
+			string url = file.Replace(Util.SavePath, Util.TerrServerUrl).Replace("\\", "/");
+			bool isUpToDate = true;
+			try
 			{
-				string fileName = Path.GetFileName(file);
-				string[] terrainLines = File.ReadAllLines(file);
-				string url = file.Replace(Util.SavePath, Util.TerrServerUrl).Replace("\\", "/");
-				bool isUpToDate = true;
-				try
-				{
-					isUpToDate = IsUrlUpToDate(url);
-				}
-				catch (Exception) { }
+				isUpToDate = IsUrlUpToDate(url);
+			}
+			catch (Exception) { }
 
-				if (deep)
+			if (deep)
+			{
+				foreach (string line in terrainLines) // Check all subrecords to make sure that they're up-to-date as well
 				{
-					foreach (string line in terrainLines) // Check all subrecords to make sure that they're up-to-date as well
+					string[] tokens = line.Split(' ');
+					if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
 					{
-						string[] tokens = line.Split(' ');
-						if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
-						{
-							isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
-						}
-						else if (tokens[0] == "OBJECT_SHARED")
-						{
-							isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
-						}
+						isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
+					}
+					else if (tokens[0] == "OBJECT_SHARED")
+					{
+						isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
 					}
 				}
-				tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
-				{
-					type = "terrain",
-					latestVersion = isUpToDate,
-					url = url,
-					path = file
-				});
 			}
+			tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
+			{
+				type = "terrain",
+				latestVersion = isUpToDate,
+				url = url,
+				path = file
+			});
 		}
 	}
-	
+
 	public static async Task IndexObjects(bool deep)
-    {
-        if (!Directory.Exists(Path.Combine(Util.TempPath, "sync")))
+	{
+		if (!Directory.Exists(Path.Combine(Util.TempPath, "sync")))
 		{
 			Directory.CreateDirectory(Path.Combine(Util.TempPath, "sync"));
 		}
 
-		foreach (string file in Directory.GetFiles(Path.Combine(Util.SavePath, "Objects"), "*", SearchOption.AllDirectories))
+		string[] stgFiles = [.. Directory.GetFiles(Path.Combine(Util.SavePath, "Objects"), "*", SearchOption.AllDirectories).Where(f => f.EndsWith(".stg"))];
+		foreach (string file in stgFiles)
 		{
-			if (file.EndsWith(".stg"))
+			string fileName = Path.GetFileName(file);
+			string[] objectLines = File.ReadAllLines(file);
+			string url = (Util.TerrServerUrl + "ws2/" + file.Replace(Util.SavePath, "")).Replace("\\", "/");
+			Console.WriteLine(url);
+			bool isUpToDate = true;
+			try
 			{
-				string fileName = Path.GetFileName(file);
-				string[] objectLines = File.ReadAllLines(file);
-				string url = (Util.TerrServerUrl + "ws2/" + file.Replace(Util.SavePath, "")).Replace("\\", "/");
-				Console.WriteLine(url);
-				bool isUpToDate = true;
-				try
-				{
-					isUpToDate = IsUrlUpToDate(url);
-				}
-				catch (Exception) { }
+				isUpToDate = IsUrlUpToDate(url);
+			}
+			catch (Exception) { }
 
-				if (deep)
+			if (deep)
+			{
+				foreach (string line in objectLines) // Check all subrecords to make sure that they're up-to-date as well
 				{
-					foreach (string line in objectLines) // Check all subrecords to make sure that they're up-to-date as well
+					string[] tokens = line.Split(' ');
+					if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
 					{
-						string[] tokens = line.Split(' ');
-						if (tokens[0] == "OBJECT" || tokens[0] == "OBJECT_BASE" || tokens[0] == "OBJECT_STATIC")
-						{
-							isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
-						}
-						else if (tokens[0] == "OBJECT_SHARED")
-						{
-							isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
-						}
+						isUpToDate = isUpToDate && IsUrlUpToDate(url.Replace(fileName, tokens[1]));
+					}
+					else if (tokens[0] == "OBJECT_SHARED")
+					{
+						isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
 					}
 				}
-				tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
-				{
-					type = "objects",
-					latestVersion = isUpToDate,
-					url = url,
-					path = file
-				});
 			}
+			tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
+			{
+				type = "objects",
+				latestVersion = isUpToDate,
+				url = url,
+				path = file
+			});
 		}
-    }
+	}
 
 	private static Dictionary<string, string> GetDirindex(string path)
 	{
