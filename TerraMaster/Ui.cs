@@ -85,4 +85,24 @@ public static class Ui
 
         return storyboard;
     }
+
+    public static Storyboard FadeInAnimation(TimeSpan duration, DependencyObject elementColor, Windows.UI.Color fromColor, Windows.UI.Color toColor)
+    {
+        Storyboard storyboard = new();
+
+        ColorAnimation animationColor = new()
+        {
+            From = fromColor,
+            To = toColor,
+            Duration = duration
+        };
+
+        Storyboard.SetTarget(animationColor, elementColor);
+        Storyboard.SetTargetProperty(animationColor, "Color");
+
+        storyboard.Children.Add(animationColor);
+        storyboard.Begin();
+
+        return storyboard;
+    }
 }
