@@ -81,7 +81,6 @@ public static class Ui
 		Storyboard.SetTargetProperty(animationPos, axis);
 
 		storyboard.Children.Add(animationPos);
-		storyboard.Begin();
 
 		return storyboard;
 	}
