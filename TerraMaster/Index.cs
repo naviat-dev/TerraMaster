@@ -2,31 +2,53 @@ using System.Security.Cryptography;
 
 namespace TerraMaster;
 
-public struct TileRecord
-{
-	public string type; // terrain, object, ortho, buildings, details, pylons, roads, trees
-	public bool latestVersion;
-	public string url;
-	public string path;
-}
-
-public struct UpdateCategory
-{
-	public string type; // no-update, update, updating, blacklist, selected
-	public List<Polygon> polygons;
-}
-
-public struct Polygon
-{
-	public string type; // include, exclude
-	public List<(int[] start, int[] end)> endpoints;
-}
-
 public class Index
 {
 	public static Dictionary<int, TileRecord> tiles = [];
 	public static int QueuedTiles { get; private set; } = 0;
 	public static int ProcessedTiles { get; private set; } = 0;
+
+	public enum TileType
+	{
+		terrain,
+		objects,
+		ortho,
+		buildings,
+		details,
+		pylons,
+		roads,
+		trees
+	}
+
+	public enum DisplayType
+	{
+		no_update,
+		update,
+		updating,
+		blacklist,
+		selected
+	}
+
+	public struct TileRecord
+	{
+		public TileType type; // terrain, object, ortho, buildings, details, pylons, roads, trees
+		public bool latestVersion;
+		public string url;
+		public string path;
+	}
+
+	public struct DisplayCategory
+	{
+		public DisplayType type; // no-update, update, updating, blacklist, selected
+		public List<Polygon> polygons;
+	}
+
+	public struct Polygon
+	{
+		public string type; // include, exclude
+		public List<(int[] start, int[] end)> endpoints;
+	}
+
 	public static void IndexAllTiles(bool deep)
 	{
 		tiles.Clear();
@@ -74,7 +96,7 @@ public class Index
 			}
 			tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
 			{
-				type = "terrain",
+				type = TileType.terrain,
 				latestVersion = isUpToDate,
 				url = url,
 				path = file
@@ -122,7 +144,7 @@ public class Index
 			}
 			tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
 			{
-				type = "objects",
+				type = TileType.objects,
 				latestVersion = isUpToDate,
 				url = url,
 				path = file
@@ -179,15 +201,31 @@ public class Index
 		}
 	}
 
-	private static UpdateCategory GeneratePolygon(string type)
+	private static DisplayCategory GeneratePolygon(DisplayType type)
 	{
 		List<Polygon> polygons = [];
 		List<TileRecord> categoryTiles;
-		if (type == "update")
+		if (type == DisplayType.update)
 		{
-			categoryTiles = [.. tiles.Values.Where(t => t.type == type && !t.latestVersion)];
+			categoryTiles = [.. tiles.Values.Where(t => !t.latestVersion)];
 		}
-		return new UpdateCategory
+		else if (type == DisplayType.no_update)
+		{
+			categoryTiles = [.. tiles.Values.Where(t => t.latestVersion)];
+		}
+		else if (type == DisplayType.updating)
+		{
+			categoryTiles = [.. tiles.Values.Where(t => t.latestVersion == false /* && DownloadMgr.activeDownloads.ContainsKey(t.url) */)];
+		}
+		else if (type == DisplayType.blacklist)
+		{
+			categoryTiles = [.. tiles.Values.Where(t => t.type == TileType.terrain && !t.latestVersion)]; // Placeholder for blacklist
+		}
+		else if (type == DisplayType.selected)
+		{
+			categoryTiles = [.. tiles.Values.Where(t => t.type == TileType.terrain && !t.latestVersion)]; // Placeholder for selected
+		}
+		return new DisplayCategory
 		{
 			type = type,
 			polygons = polygons
