@@ -53,12 +53,12 @@ public partial class App : Application
 		MainWindow.Activate();
 	}
 
-	/// <summary>
-	/// Invoked when Navigation to a certain page fails
-	/// </summary>
-	/// <param name="sender">The Frame which failed navigation</param>
-	/// <param name="e">Details about the navigation failure</param>
-	void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+    /// <summary>
+    /// Invoked when Navigation to a certain page fails
+    /// </summary>
+    /// <param name="sender">The Frame which failed navigation</param>
+    /// <param name="e">Details about the navigation failure</param>
+    private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
 	{
 		throw new InvalidOperationException($"Failed to load {e.SourcePageType.FullName}: {e.Exception}");
 	}

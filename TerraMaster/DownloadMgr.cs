@@ -12,8 +12,8 @@ namespace TerraMaster;
 
 public class DownloadMgr
 {
-	static readonly HashSet<string> CurrentTasks = [];
-	static readonly SemaphoreSlim taskQueue = new(50);
+	private static readonly HashSet<string> CurrentTasks = [];
+	private static readonly SemaphoreSlim taskQueue = new(50);
 	private static readonly HttpClientHandler handler = new() { ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true };
 	public static readonly HttpClient client = new(handler);
 
@@ -69,7 +69,7 @@ public class DownloadMgr
 		_ = taskQueue.Release();
 	}
 
-	static async Task DownloadTerrain(double lat, double lon, string version)
+	private static async Task DownloadTerrain(double lat, double lon, string version)
 	{
 		string hemiLat = lat > 0 ? "n" : "s";
 		string hemiLon = lon > 0 ? "e" : "w";
@@ -149,7 +149,7 @@ public class DownloadMgr
 									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
 									_ = CurrentTasks.Remove(urlXml);
 									string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
-									acFile = (Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/") + "/" + objectFile.Substring(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6);
+									acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
 								}
 								else
 								{
@@ -241,7 +241,7 @@ public class DownloadMgr
 									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
 									_ = CurrentTasks.Remove(urlXml);
 									string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
-									acFile = (Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/") + "/" + objectFile.Substring(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6);
+									acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
 								}
 								else
 								{
@@ -323,7 +323,7 @@ public class DownloadMgr
 		}
 	}
 
-	static async Task DownloadAirport(string code, string version)
+	private static async Task DownloadAirport(string code, string version)
 	{
 		string subfolder = version + "/Airports/" + string.Join("/", code[..^1].ToCharArray());
 		string parent = Util.TerrServerUrl + subfolder;
@@ -364,7 +364,7 @@ public class DownloadMgr
 		;
 	}
 
-	static async Task DownloadOrthophoto(double lat, double lon, int size)
+	private static async Task DownloadOrthophoto(double lat, double lon, int size)
 	{
 		string hemiLat = lat > 0 ? "n" : "s";
 		string hemiLon = lon > 0 ? "e" : "w";
@@ -481,7 +481,7 @@ public class DownloadMgr
 		}
 	}
 
-	static async Task DownloadObjects(double lat, double lon)
+	private static async Task DownloadObjects(double lat, double lon)
 	{
 		string hemiLat = lat > 0 ? "n" : "s";
 		string hemiLon = lon > 0 ? "e" : "w";
@@ -523,7 +523,7 @@ public class DownloadMgr
 								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
 								_ = CurrentTasks.Remove(urlXml);
 								string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
-								acFile = (Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/") + "/" + objectFile.Substring(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6);
+								acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
 							}
 							else
 							{
@@ -567,7 +567,7 @@ public class DownloadMgr
 								try { await File.WriteAllBytesAsync(Util.SavePath + "/Objects/" + subfolder + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
 								_ = CurrentTasks.Remove(urlXml);
 								string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
-								acFile = (Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/") + objectFile.Substring(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6);
+								acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
 							}
 							else
 							{
@@ -609,11 +609,10 @@ public class DownloadMgr
 		}
 	}
 
-	static async Task DownloadOSM(double lat, double lon)
+	private static async Task DownloadOSM(double lat, double lon)
 	{
 		string hemiLat = lat > 0 ? "n" : "s";
 		string hemiLon = lon > 0 ? "e" : "w";
-		string tile = Util.GetTileIndex(lat, lon).ToString();
 		string subfolder = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/" + hemiLon + Math.Abs(Math.Floor(lon)).ToString().PadLeft(3, '0') + hemiLat + Math.Abs(Math.Floor(lat)).ToString().PadLeft(2, '0');
 		string subfolderTxz = hemiLon + (Math.Abs(Math.Floor(lon / 10)) * 10).ToString().PadLeft(3, '0') + hemiLat + (Math.Abs(Math.Floor(lat / 10)) * 10).ToString().PadLeft(2, '0') + "/";
 		string urlBuildings = Util.TerrServerUrl + "osm2city/Buildings/" + subfolder + ".txz";
@@ -808,7 +807,7 @@ public class DownloadMgr
 		}
 	}
 
-	public static async Task DownloadPlan(string filepath, string version, int size, int radius)
+	public static async Task DownloadPlan(string filepath, int radius)
 	{
 		HashSet<(double, double)> tiles = [];
 		if (filepath.EndsWith(".fgfp"))

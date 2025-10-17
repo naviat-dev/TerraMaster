@@ -2,8 +2,8 @@ namespace TerraMaster;
 
 public sealed partial class LoadingPage : Page
 {
-	public static event Action<string> LoadingChanged;
-	public static string ErrorMessage;
+	public static event Action<string>? LoadingChanged;
+	public static string? ErrorMessage { get; private set; }
 
 	public LoadingPage()
 	{
@@ -24,7 +24,7 @@ public sealed partial class LoadingPage : Page
 				});
 			}
 		};
-		this.Loaded += async (s, e) =>
+		Loaded += async (s, e) =>
 		{
 			try
 			{

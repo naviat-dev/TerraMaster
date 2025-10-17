@@ -1,5 +1,5 @@
-using Uno.UI.Hosting;
 using TerraMaster;
+using Uno.UI.Hosting;
 
 internal class Program
 {

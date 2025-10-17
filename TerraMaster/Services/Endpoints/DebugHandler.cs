@@ -1,12 +1,7 @@
 namespace TerraMaster.Services.Endpoints;
 
-internal class DebugHttpHandler : DelegatingHandler
+internal class DebugHttpHandler(HttpMessageHandler? innerHandler = null) : DelegatingHandler(innerHandler ?? new HttpClientHandler())
 {
-    public DebugHttpHandler(HttpMessageHandler? innerHandler = null)
-        : base(innerHandler ?? new HttpClientHandler())
-    {
-    }
-
     protected async override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
@@ -26,7 +21,7 @@ internal class DebugHttpHandler : DelegatingHandler
                 Console.Error.WriteLine($"  {key}: {values}");
             }
 
-            var content = request.Content is not null ? await request.Content.ReadAsStringAsync() : null;
+            var content = request.Content is not null ? await request.Content.ReadAsStringAsync(cancellationToken) : null;
             if (!string.IsNullOrEmpty(content))
             {
                 Console.Error.WriteLine(content);

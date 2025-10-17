@@ -35,7 +35,7 @@ public static class Cesium
 		_ = app.MapGet("/api/tileindex/{lat:double}/{lon:double}", (double lat, double lon) =>
 		{
 			int tileIndex = Util.GetTileIndex(lat, lon);
-			return Results.Json(new { tileIndex = tileIndex });
+			return Results.Json(new { tileIndex });
 		});
 
 		// Optionally, serve cesium.js.html at root
