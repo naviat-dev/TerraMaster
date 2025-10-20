@@ -1,31 +1,31 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "build-desktop",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/TerraMaster/TerraMaster.csproj",
-        "/property:GenerateFullPaths=true",
-        "/property:TargetFramework=net9.0-desktop",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "publish-desktop",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "publish",
-        "${workspaceFolder}/TerraMaster/TerraMaster.csproj",
-        "/property:GenerateFullPaths=true",
-        "/property:TargetFramework=net9.0-desktop",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-desktop",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/TerraSDM/TerraSDM.csproj",
+				"/property:GenerateFullPaths=true",
+				"/property:TargetFramework=net9.0-desktop",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "publish-desktop",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/TerraSDM/TerraSDM.csproj",
+				"/property:GenerateFullPaths=true",
+				"/property:TargetFramework=net9.0-desktop",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		}
+	]
 }
