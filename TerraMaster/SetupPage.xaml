@@ -35,7 +35,8 @@
 				   FontSize="60"
 				   Margin="20"
 				   HorizontalAlignment="Left"
-				   VerticalAlignment="Center"/>
+				   VerticalAlignment="Center"
+				   TextWrapping="Wrap"/>
 		<TextBlock Grid.Row="1"
 				   x:Name="setupBody"
 				   Text="Just a few more steps to get you started."
@@ -43,7 +44,8 @@
 				   FontSize="25"
 				   Margin="20"
 				   HorizontalAlignment="Left"
-				   VerticalAlignment="Center"/>
+				   VerticalAlignment="Center"
+				   TextWrapping="Wrap"/>
 		<Button Grid.Row="2"
 				x:Name="startSetupButton"
 				Content="->"
