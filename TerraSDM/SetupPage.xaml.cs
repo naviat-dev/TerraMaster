@@ -124,14 +124,21 @@ public sealed partial class SetupPage : Page
 
 	private void SaveConfiguration()
 	{
-		// Save to Config or application settings
+		// Save to Config
 		if (_selectedFolder != null)
 		{
-			// Config.DataPath = _selectedFolder.Path;
+			Config.SavePath = _selectedFolder.Path;
 		}
 		if (!string.IsNullOrWhiteSpace(cesiumTokenInput.Text))
 		{
-			// Config.CesiumApiToken = cesiumTokenInput.Text;
+			Config.CesiumToken = cesiumTokenInput.Text;
+		}
+
+		// Persist to file
+		if (!Config.Save())
+		{
+			// Handle save error if needed
+			Console.WriteLine("Failed to save configuration");
 		}
 	}
 }
