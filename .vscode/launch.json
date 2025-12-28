@@ -13,7 +13,7 @@
 			"request": "launch",
 			"preLaunchTask": "build-desktop",
 			// If you have changed target frameworks, make sure to update the program path.
-			"program": "${workspaceFolder}/TerraSDM/bin/Debug/net9.0-desktop/TerraSDM.dll",
+			"program": "${workspaceFolder}/TerraSDM/bin/Debug/net10.0-desktop/TerraSDM.dll",
 			"args": [],
 			"launchSettingsProfile": "TerraSDM (Desktop)",
 			"env": {
