@@ -93,7 +93,7 @@ public static class Config
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Error reading config: {ex.Message}");
+			Logger.Error("Config", "Error reading config", ex);
 		}
 		return false;
 	}
@@ -116,11 +116,12 @@ public static class Config
 
 			string jsonString = JsonSerializer.Serialize(_data, _jsonOptions);
 			File.WriteAllText(path, jsonString);
+			Logger.Info("Config", $"Configuration saved to {path}");
 			return true;
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Error saving config: {ex.Message}");
+			Logger.Error("Config", "Error saving config", ex);
 			return false;
 		}
 	}

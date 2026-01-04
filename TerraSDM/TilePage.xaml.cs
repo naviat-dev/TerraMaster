@@ -10,7 +10,7 @@ public sealed partial class TilePage : Page
 		MyWebView.WebMessageReceived += (s, e) =>
 		{
 			string message = e.WebMessageAsJson;
-			Console.WriteLine("[JS: " + message + "]");
+			Logger.Debug("TilePage", $"[JS: {message}]");
 		};
 	}
 }

@@ -30,13 +30,13 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download.");
+					Logger.Debug("DownloadMgr", $"{$"Terrain data not found for tile at {lat}, {lon}. Skipping terrain download."}");
 					_ = taskQueue.Release();
 					return;
 				}
 				else
 				{
-					Console.WriteLine($"Error downloading terrain data: {ex.Message}");
+					Logger.Debug("DownloadMgr", $"{$"Error downloading terrain data: {ex.Message}"}");
 				}
 			}
 			await DownloadOrthophoto(lat, lon, size); // There should always be orthophoto data available when there is terrain data, so no try-catch here
@@ -48,23 +48,23 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Object data not found for tile at {lat}, {lon}. Skipping object download.");
+					Logger.Debug("DownloadMgr", $"{$"Object data not found for tile at {lat}, {lon}. Skipping object download."}");
 					_ = taskQueue.Release();
 					return;
 				}
 				else
 				{
-					Console.WriteLine($"Error downloading object data: {ex.Message}");
+					Logger.Debug("DownloadMgr", $"{$"Error downloading object data: {ex.Message}"}");
 				}
 			}
 			await DownloadOSM(lat, lon);
 			_ = taskQueue.Release();
 
-			Console.WriteLine($"Download successful.");
+			Logger.Info("DownloadMgr", $"Download successful for tile at {lat}, {lon}");
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Error downloading tile: {ex.Message}");
+			Logger.Error("DownloadMgr", $"Error downloading tile at {lat}, {lon}", ex);
 		}
 		_ = taskQueue.Release();
 	}
@@ -85,12 +85,12 @@ public class DownloadMgr
 			{
 				try
 				{
-					Console.WriteLine("Downloading " + urlBtg + " ...");
+					Logger.Debug("DownloadMgr", $"Downloading {urlBtg}");
 					byte[] btgBytes = await client.GetByteArrayAsync(urlBtg);
 					if (!Directory.Exists(Ws2Dir + "Terrain/" + subfolder))
 					{
 						_ = Directory.CreateDirectory(Ws2Dir + "Terrain/" + subfolder);
-						Console.WriteLine("Creating terrain directories...");
+						Logger.Debug("DownloadMgr", "Creating terrain directories...");
 					}
 					await File.WriteAllBytesAsync(Ws2Dir + "Terrain/" + subfolder + tile + ".btg.gz", btgBytes);
 					_ = CurrentTasks.Remove(urlBtg);
@@ -106,14 +106,14 @@ public class DownloadMgr
 			{
 				try
 				{
-					Console.WriteLine("Downloading " + urlStg + " ...");
+					Logger.Debug("DownloadMgr", $"Downloading {urlStg}");
 					byte[] stgBytes = await client.GetByteArrayAsync(urlStg);
 					if (!Directory.Exists(Ws2Dir + "Terrain/" + subfolder))
 					{
 						_ = Directory.CreateDirectory(Ws2Dir + "Terrain/" + subfolder);
-						Console.WriteLine("Creating terrain directories...");
+						Logger.Debug("DownloadMgr", "Creating terrain directories...");
 					}
-					Console.WriteLine(Ws2Dir + "Terrain/" + subfolder + tile + ".stg");
+					Logger.Debug("DownloadMgr", $"{Ws2Dir + "Terrain/" + subfolder + tile + ".stg"}");
 					await File.WriteAllBytesAsync(Ws2Dir + "Terrain/" + subfolder + tile + ".stg", stgBytes);
 					string[] stgFile = System.Text.Encoding.UTF8.GetString(stgBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 					foreach (string line in stgFile)
@@ -125,9 +125,9 @@ public class DownloadMgr
 							string urlObj = Util.TerrServerUrl + version + "/Terrain/" + subfolder + tokens[1] + ".gz";
 							if (CurrentTasks.Add(urlObj))
 							{
-								Console.WriteLine("Downloading " + urlObj + " ...");
+								Logger.Debug("DownloadMgr", $"Downloading {urlObj}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
-								try { await File.WriteAllBytesAsync(Ws2Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Ws2Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing object file", ex); }
 								_ = CurrentTasks.Remove(urlObj);
 							}
 						}
@@ -144,9 +144,9 @@ public class DownloadMgr
 							{
 								if (tokens[1].EndsWith(".xml"))
 								{
-									Console.WriteLine("Downloading " + urlXml + " ...");
+									Logger.Debug("DownloadMgr", $"Downloading {urlXml}");
 									byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
-									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 									_ = CurrentTasks.Remove(urlXml);
 									string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
 									acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
@@ -158,9 +158,9 @@ public class DownloadMgr
 								string urlAc = Util.TerrServerUrl + version + "/" + acFile;
 								if (CurrentTasks.Add(urlAc))
 								{
-									Console.WriteLine("Downloading " + urlAc + " ...");
+									Logger.Debug("DownloadMgr", $"Downloading {urlAc}");
 									byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
-									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 									_ = CurrentTasks.Remove(urlAc);
 									string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 									foreach (string modelLine in modelFile)
@@ -170,9 +170,9 @@ public class DownloadMgr
 											string urlTex = Util.TerrServerUrl + version + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
 											if (CurrentTasks.Add(urlTex))
 											{
-												Console.WriteLine("Downloading " + urlTex + " ...");
+												Logger.Debug("DownloadMgr", $"Downloading {urlTex}");
 												byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
-												try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+												try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 												_ = CurrentTasks.Remove(urlTex);
 											}
 										}
@@ -198,14 +198,14 @@ public class DownloadMgr
 			{
 				try
 				{
-					Console.WriteLine("Downloading " + urlStg + " ...");
+					Logger.Debug("DownloadMgr", $"Downloading {urlStg}");
 					byte[] stgBytes = await client.GetByteArrayAsync(urlStg);
 					if (!Directory.Exists(Ws3Dir + "Terrain/" + subfolder))
 					{
 						_ = Directory.CreateDirectory(Ws3Dir + "Terrain/" + subfolder);
-						Console.WriteLine("Creating terrain directories...");
+						Logger.Debug("DownloadMgr", "Creating terrain directories...");
 					}
-					Console.WriteLine(Ws3Dir + "Terrain/" + subfolder + tile + ".stg");
+					Logger.Debug("DownloadMgr", $"{Ws3Dir + "Terrain/" + subfolder + tile + ".stg"}");
 					await File.WriteAllBytesAsync(Ws3Dir + "Terrain/" + subfolder + tile + ".stg", stgBytes);
 					string[] stgFile = System.Text.Encoding.UTF8.GetString(stgBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 					foreach (string line in stgFile)
@@ -217,9 +217,9 @@ public class DownloadMgr
 							string urlObj = Util.TerrServerUrl + version + "/Terrain/" + subfolder + tokens[1] + ".gz";
 							if (CurrentTasks.Add(urlObj))
 							{
-								Console.WriteLine("Downloading " + urlObj + " ...");
+								Logger.Debug("DownloadMgr", $"Downloading {urlObj}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
-								try { await File.WriteAllBytesAsync(Ws3Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Ws3Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 								_ = CurrentTasks.Remove(urlObj);
 							}
 						}
@@ -236,9 +236,9 @@ public class DownloadMgr
 							{
 								if (tokens[1].EndsWith(".xml"))
 								{
-									Console.WriteLine("Downloading " + urlXml + " ...");
+									Logger.Debug("DownloadMgr", $"Downloading {urlXml}");
 									byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
-									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 									_ = CurrentTasks.Remove(urlXml);
 									string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
 									acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
@@ -250,9 +250,9 @@ public class DownloadMgr
 								string urlAc = Util.TerrServerUrl + version + "/" + acFile;
 								if (CurrentTasks.Add(urlAc))
 								{
-									Console.WriteLine("Downloading " + urlAc + " ...");
+									Logger.Debug("DownloadMgr", $"Downloading {urlAc}");
 									byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
-									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+									try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 									_ = CurrentTasks.Remove(urlAc);
 									string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 									foreach (string modelLine in modelFile)
@@ -262,9 +262,9 @@ public class DownloadMgr
 											string urlTex = Util.TerrServerUrl + version + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
 											if (CurrentTasks.Add(urlTex))
 											{
-												Console.WriteLine("Downloading " + urlTex + " ...");
+												Logger.Debug("DownloadMgr", $"Downloading {urlTex}");
 												byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
-												try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+												try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 												_ = CurrentTasks.Remove(urlTex);
 											}
 										}
@@ -285,7 +285,7 @@ public class DownloadMgr
 			{
 				try
 				{
-					Console.WriteLine("Downloading " + urlVpb + " ...");
+					Logger.Debug("DownloadMgr", $"Downloading {urlVpb}");
 					byte[] vpbBytes = await client.GetByteArrayAsync(urlVpb);
 					await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, subfolder[..^1].Split("/")[1] + ".zip"), vpbBytes);
 					using FileStream zipStream = File.OpenRead(Path.Combine(Util.TempPath, subfolder[..^1].Split("/")[1] + ".zip"));
@@ -331,25 +331,25 @@ public class DownloadMgr
 		{
 			HtmlDocument airportParentDir = new();
 			airportParentDir.LoadHtml(System.Text.Encoding.UTF8.GetString(client.GetByteArrayAsync(parent).Result));
-			foreach (HtmlNode node in airportParentDir.DocumentNode.SelectNodes("//tr"))
+			foreach (HtmlNode node in airportParentDir.DocumentNode.SelectNodes("//tr")!)
 			{
 				if (!node.InnerHtml.Contains(".xml"))
 					continue;
 
 				HtmlDocument innerNode = new();
 				innerNode.LoadHtml(node.OuterHtml); // For some reason, simply using the node in the foreach loop returns weird and incorrect results
-				string airportAttribute = innerNode.DocumentNode.SelectSingleNode("//a").InnerHtml;
+				string airportAttribute = innerNode.DocumentNode.SelectSingleNode("//a")!.InnerHtml;
 				if (airportAttribute.Split(".")[0] == code)
 				{
 					string urlApt = parent + "/" + airportAttribute;
 					if (CurrentTasks.Add(urlApt))
 					{
-						Console.WriteLine("Downloading " + urlApt + " ...");
+						Logger.Debug("DownloadMgr", $"Downloading {urlApt}");
 						byte[] arptBytes = await client.GetByteArrayAsync(urlApt);
 						if (!Directory.Exists(Util.SavePath + subfolder))
 						{
 							_ = Directory.CreateDirectory(Util.SavePath + subfolder);
-							Console.WriteLine("Creating airport directories...");
+							Logger.Debug("DownloadMgr", "Creating airport directories...");
 						}
 						await File.WriteAllBytesAsync(Util.SavePath + subfolder + "/" + airportAttribute, arptBytes);
 						_ = CurrentTasks.Remove(urlApt);
@@ -359,7 +359,7 @@ public class DownloadMgr
 		}
 		catch (HttpRequestException ex)
 		{
-			Console.WriteLine("Error accessing airport data: " + ex.Message);
+			Logger.Error("DownloadMgr", "Error accessing airport data", ex);
 		}
 		;
 	}
@@ -380,7 +380,7 @@ public class DownloadMgr
 				if (!Directory.Exists(Util.SavePath + "Orthophotos/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Orthophotos/" + subfolder);
-					Console.WriteLine("Creating orthophoto directories...");
+					Logger.Debug("DownloadMgr", "Creating orthophoto directories...");
 				}
 				int subTileCount = size < 2048 ? 1 : (int)Math.Pow(size / 2048, 2);
 				int tilesPerSide = (int)Math.Sqrt(subTileCount);
@@ -399,7 +399,7 @@ public class DownloadMgr
 					for (int j = 0; j < lonSteps.Length - 1; j++)
 					{
 						string urlSubPic = $"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox={lonSteps[j]}%2C{latSteps[i]}%2C{lonSteps[j + 1]}%2C{latSteps[i + 1]}&bboxSR=&layers=&layerDefs=&size=2048%2C{curHeight}&imageSR=&historicMoment=&format=jpg&transparent=false&dpi=&time=&timeRelation=esriTimeRelationOverlaps&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&rotation=&datumTransformations=&layerParameterValues=&mapRangeValues=&layerRangeValues=&clipping=&spatialFilter=&f=image";
-						Console.WriteLine("Downloading " + urlSubPic + " ...");
+						Logger.Debug("DownloadMgr", $"Downloading {urlSubPic}");
 						byte[] orthoSubBytes = await client.GetByteArrayAsync(urlSubPic);
 						await File.WriteAllBytesAsync(Path.Combine(Util.TempPath, tile + (size > 2048 ? "_" + count : "") + ".jpg"), orthoSubBytes);
 						count++;
@@ -410,7 +410,7 @@ public class DownloadMgr
 				int cols = tilesPerSide;
 				int tileWidth = 2048;
 				int tileHeight = totalHeight / rows;
-				Console.WriteLine(cols + " columns, " + rows + " rows, " + tileWidth + "px width, " + tileHeight + "px height");
+				Logger.Debug("DownloadMgr", $"{cols} columns, {rows} rows, {tileWidth}px width, {tileHeight}px height");
 				if (totalHeight % rows != 0) tileHeight += totalHeight % rows;
 				using SKBitmap stitched = new(2048 * tilesPerSide, tileHeight * tilesPerSide);
 				// Stitch the tiles together
@@ -477,7 +477,7 @@ public class DownloadMgr
 		}
 		catch (HttpRequestException ex)
 		{
-			Console.WriteLine("Error downloading image(" + urlPic + "): " + ex.Message);
+			Logger.Debug("DownloadMgr", $"{"Error downloading image(" + urlPic + "): " + ex.Message}");
 		}
 	}
 
@@ -493,12 +493,12 @@ public class DownloadMgr
 		{
 			try
 			{
-				Console.WriteLine("Downloading " + urlObj + " ...");
+				Logger.Debug("DownloadMgr", $"Downloading {urlObj}");
 				byte[] objBytes = await client.GetByteArrayAsync(urlObj);
 				if (!Directory.Exists(Util.SavePath + "Objects/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Objects/" + subfolder);
-					Console.WriteLine("Creating object directories...");
+					Logger.Debug("DownloadMgr", "Creating object directories...");
 				}
 				await File.WriteAllBytesAsync(Util.SavePath + "Objects/" + subfolder + tile + ".stg", objBytes);
 				string[] objFile = System.Text.Encoding.UTF8.GetString(objBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
@@ -518,9 +518,9 @@ public class DownloadMgr
 						{
 							if (tokens[1].EndsWith(".xml"))
 							{
-								Console.WriteLine("Downloading " + urlXml + " ...");
+								Logger.Debug("DownloadMgr", $"Downloading {urlXml}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
-								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 								_ = CurrentTasks.Remove(urlXml);
 								string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
 								acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
@@ -532,9 +532,9 @@ public class DownloadMgr
 							string urlAc = Util.TerrServerUrl + "ws2/" + acFile;
 							if (CurrentTasks.Add(urlAc))
 							{
-								Console.WriteLine("Downloading " + urlAc + " ...");
+								Logger.Debug("DownloadMgr", $"Downloading {urlAc}");
 								byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
-								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 								_ = CurrentTasks.Remove(urlAc);
 								string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 								foreach (string modelLine in modelFile)
@@ -544,9 +544,9 @@ public class DownloadMgr
 										string urlTex = Util.TerrServerUrl + "ws2/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
 										if (CurrentTasks.Add(urlTex))
 										{
-											Console.WriteLine("Downloading " + urlTex + " ...");
+											Logger.Debug("DownloadMgr", $"Downloading {urlTex}");
 											byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
-											try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+											try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 											_ = CurrentTasks.Remove(urlTex);
 										}
 									}
@@ -562,9 +562,9 @@ public class DownloadMgr
 						{
 							if (tokens[1].EndsWith(".xml"))
 							{
-								Console.WriteLine("Downloading " + urlXml + " ...");
+								Logger.Debug("DownloadMgr", $"Downloading {urlXml}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
-								try { await File.WriteAllBytesAsync(Util.SavePath + "/Objects/" + subfolder + tokens[1], objectBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Util.SavePath + "/Objects/" + subfolder + tokens[1], objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 								_ = CurrentTasks.Remove(urlXml);
 								string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
 								acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
@@ -576,9 +576,9 @@ public class DownloadMgr
 							string urlAc = Util.TerrServerUrl + "ws2/Objects/" + subfolder + acFile;
 							if (CurrentTasks.Add(urlAc))
 							{
-								Console.WriteLine("Downloading " + urlAc + " ...");
+								Logger.Debug("DownloadMgr", $"Downloading {urlAc}");
 								byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
-								try { await File.WriteAllBytesAsync(Util.SavePath + "/Objects/" + subfolder + acFile, modelBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+								try { await File.WriteAllBytesAsync(Util.SavePath + "/Objects/" + subfolder + acFile, modelBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 								_ = CurrentTasks.Remove(urlAc);
 								string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 								foreach (string modelLine in modelFile)
@@ -588,9 +588,9 @@ public class DownloadMgr
 										string urlTex = Util.TerrServerUrl + "ws2/Objects/" + subfolder + modelLine[8..].Replace("\"", "");
 										if (CurrentTasks.Add(urlTex))
 										{
-											Console.WriteLine("Downloading " + urlTex + " ...");
+											Logger.Debug("DownloadMgr", $"Downloading {urlTex}");
 											byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
-											try { await File.WriteAllBytesAsync(Util.SavePath + "Objects/" + subfolder + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException) { Console.WriteLine("RACE"); }
+											try { await File.WriteAllBytesAsync(Util.SavePath + "Objects/" + subfolder + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 											_ = CurrentTasks.Remove(urlTex);
 										}
 									}
@@ -624,15 +624,15 @@ public class DownloadMgr
 		{
 			try
 			{
-				Console.WriteLine("Downloading " + urlBuildings + " ...");
+				Logger.Debug("DownloadMgr", $"Downloading {urlBuildings}");
 				byte[] buildingsBytes = await client.GetByteArrayAsync(urlBuildings);
 				if (!Directory.Exists(Util.SavePath + "Buildings/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Buildings/" + subfolder);
-					Console.WriteLine("Creating OSM building directories...");
+					Logger.Debug("DownloadMgr", "Creating OSM building directories...");
 				}
 				await File.WriteAllBytesAsync(Util.SavePath + "Buildings/" + subfolder + ".txz", buildingsBytes);
-				Console.WriteLine("Unzipping " + Util.SavePath + "Buildings/" + subfolder + ".txz ...");
+				Logger.Info("DownloadMgr", $"Unzipping {Util.SavePath + "Buildings/" + subfolder + ".txz ..."}");
 				using FileStream xzStream = File.OpenRead(Util.SavePath + "Buildings/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
@@ -648,11 +648,11 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Buildings data not found for tile at {lat}, {lon}. Skipping buildings download.");
+					Logger.Debug("DownloadMgr", $"{$"Buildings data not found for tile at {lat}, {lon}. Skipping buildings download."}");
 				}
 				else
 				{
-					Console.WriteLine("Error downloading file (" + urlBuildings + "): " + ex.Message);
+					Logger.Debug("DownloadMgr", $"{"Error downloading file (" + urlBuildings + "): " + ex.Message}");
 				}
 			}
 			_ = CurrentTasks.Remove(urlBuildings);
@@ -661,15 +661,15 @@ public class DownloadMgr
 		{
 			try
 			{
-				Console.WriteLine("Downloading " + urlDetails + " ...");
+				Logger.Debug("DownloadMgr", $"Downloading {urlDetails}");
 				byte[] detailsBytes = await client.GetByteArrayAsync(urlDetails);
 				if (!Directory.Exists(Util.SavePath + "Details/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Details/" + subfolder);
-					Console.WriteLine("Creating OSM detail directories...");
+					Logger.Debug("DownloadMgr", "Creating OSM detail directories...");
 				}
 				await File.WriteAllBytesAsync(Util.SavePath + "Details/" + subfolder + ".txz", detailsBytes);
-				Console.WriteLine("Unzipping " + Util.SavePath + "Details/" + subfolder + ".txz ...");
+				Logger.Info("DownloadMgr", $"Unzipping {Util.SavePath + "Details/" + subfolder + ".txz ..."}");
 				using FileStream xzStream = File.OpenRead(Util.SavePath + "Details/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
@@ -685,11 +685,11 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Details data not found for tile at {lat}, {lon}. Skipping details download.");
+					Logger.Debug("DownloadMgr", $"{$"Details data not found for tile at {lat}, {lon}. Skipping details download."}");
 				}
 				else
 				{
-					Console.WriteLine("Error downloading file (" + urlDetails + "): " + ex.Message);
+					Logger.Debug("DownloadMgr", $"{"Error downloading file (" + urlDetails + "): " + ex.Message}");
 				}
 			}
 			_ = CurrentTasks.Remove(urlDetails);
@@ -698,15 +698,15 @@ public class DownloadMgr
 		{
 			try
 			{
-				Console.WriteLine("Downloading " + urlPylons + " ...");
+				Logger.Debug("DownloadMgr", $"Downloading {urlPylons}");
 				byte[] pylonsBytes = await client.GetByteArrayAsync(urlPylons);
 				if (!Directory.Exists(Util.SavePath + "Pylons/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Pylons/" + subfolder);
-					Console.WriteLine("Creating OSM pylon directories...");
+					Logger.Debug("DownloadMgr", "Creating OSM pylon directories...");
 				}
 				await File.WriteAllBytesAsync(Util.SavePath + "Pylons/" + subfolder + ".txz", pylonsBytes);
-				Console.WriteLine("Unzipping " + Util.SavePath + "Pylons/" + subfolder + ".txz ...");
+				Logger.Info("DownloadMgr", $"Unzipping {Util.SavePath + "Pylons/" + subfolder + ".txz ..."}");
 				using FileStream xzStream = File.OpenRead(Util.SavePath + "Pylons/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
@@ -722,11 +722,11 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Pylons data not found for tile at {lat}, {lon}. Skipping pylons download.");
+					Logger.Debug("DownloadMgr", $"{$"Pylons data not found for tile at {lat}, {lon}. Skipping pylons download."}");
 				}
 				else
 				{
-					Console.WriteLine("Error downloading file (" + urlPylons + "): " + ex.Message);
+					Logger.Debug("DownloadMgr", $"{"Error downloading file (" + urlPylons + "): " + ex.Message}");
 				}
 			}
 			_ = CurrentTasks.Remove(urlPylons);
@@ -735,15 +735,15 @@ public class DownloadMgr
 		{
 			try
 			{
-				Console.WriteLine("Downloading " + urlRoads + " ...");
+				Logger.Debug("DownloadMgr", $"Downloading {urlRoads}");
 				byte[] roadsBytes = await client.GetByteArrayAsync(urlRoads);
 				if (!Directory.Exists(Util.SavePath + "Roads/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Roads/" + subfolder);
-					Console.WriteLine("Creating OSM road directories...");
+					Logger.Debug("DownloadMgr", "Creating OSM road directories...");
 				}
 				await File.WriteAllBytesAsync(Util.SavePath + "Roads/" + subfolder + ".txz", roadsBytes);
-				Console.WriteLine("Unzipping " + Util.SavePath + "Roads/" + subfolder + ".txz ...");
+				Logger.Info("DownloadMgr", $"Unzipping {Util.SavePath + "Roads/" + subfolder + ".txz ..."}");
 				using FileStream xzStream = File.OpenRead(Util.SavePath + "Roads/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
@@ -759,11 +759,11 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Roads data not found for tile at {lat}, {lon}. Skipping roads download.");
+					Logger.Debug("DownloadMgr", $"{$"Roads data not found for tile at {lat}, {lon}. Skipping roads download."}");
 				}
 				else
 				{
-					Console.WriteLine("Error downloading file (" + urlRoads + "): " + ex.Message);
+					Logger.Debug("DownloadMgr", $"{"Error downloading file (" + urlRoads + "): " + ex.Message}");
 				}
 			}
 			_ = CurrentTasks.Remove(urlRoads);
@@ -772,15 +772,15 @@ public class DownloadMgr
 		{
 			try
 			{
-				Console.WriteLine("Downloading " + urlTrees + " ...");
+				Logger.Debug("DownloadMgr", $"Downloading {urlTrees}");
 				byte[] treesBytes = await client.GetByteArrayAsync(urlTrees);
 				if (!Directory.Exists(Util.SavePath + "Trees/" + subfolder))
 				{
 					_ = Directory.CreateDirectory(Util.SavePath + "Trees/" + subfolder);
-					Console.WriteLine("Creating OSM tree directories...");
+					Logger.Debug("DownloadMgr", "Creating OSM tree directories...");
 				}
 				await File.WriteAllBytesAsync(Util.SavePath + "Trees/" + subfolder + ".txz", treesBytes);
-				Console.WriteLine("Unzipping " + Util.SavePath + "Trees/" + subfolder + ".txz ...");
+				Logger.Info("DownloadMgr", $"Unzipping {Util.SavePath + "Trees/" + subfolder + ".txz ..."}");
 				using FileStream xzStream = File.OpenRead(Util.SavePath + "Trees/" + subfolder + ".txz");
 				using var reader = ReaderFactory.Open(xzStream);
 				while (reader.MoveToNextEntry())
@@ -796,11 +796,11 @@ public class DownloadMgr
 			{
 				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 				{
-					Console.WriteLine($"Trees data not found for tile at {lat}, {lon}. Skipping trees download.");
+					Logger.Debug("DownloadMgr", $"{$"Trees data not found for tile at {lat}, {lon}. Skipping trees download."}");
 				}
 				else
 				{
-					Console.WriteLine("Error downloading file (" + urlTrees + "): " + ex.Message);
+					Logger.Debug("DownloadMgr", $"{"Error downloading file (" + urlTrees + "): " + ex.Message}");
 				}
 			}
 			_ = CurrentTasks.Remove(urlTrees);
@@ -826,7 +826,7 @@ public class DownloadMgr
 				double wpNxtLat = double.Parse(nextWp.SelectSingleNode("//lat").InnerText);
 				double wpNxtLon = double.Parse(nextWp.SelectSingleNode("//lon").InnerText);
 				List<(double, double)> pointsAlongPath = GreatCircleInterpolator.GetGreatCirclePoints(wpCurLat, wpCurLon, wpNxtLat, wpNxtLon, (int)Math.Floor(Util.Haversine(wpCurLat, wpNxtLat, wpCurLon, wpNxtLon)) / 5);
-				Console.WriteLine("Points along path: " + pointsAlongPath.Count);
+				Logger.Debug("DownloadMgr", $"{"Points along path: " + pointsAlongPath.Count}");
 				_ = pointsAlongPath.Prepend((wpCurLat, wpCurLon));
 				foreach ((double lat, double lon) in pointsAlongPath)
 				{
@@ -838,7 +838,7 @@ public class DownloadMgr
 				}
 			}
 		}
-		Console.WriteLine(tiles.Count);
+		Logger.Debug("DownloadMgr", $"{tiles.Count}");
 		foreach ((double lat, double lon) in tiles)
 		{
 			_ = DownloadTile(lat, lon, Util.OrthoRes, "ws2");

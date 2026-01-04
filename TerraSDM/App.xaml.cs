@@ -9,8 +9,14 @@ public partial class App : Application
 	public App()
 	{
 		InitializeComponent();
+
+		// Initialize logging system
+		Logger.Initialize();
+		Logger.Info("App", "TerraSDM application starting");
+
 		Suspending += static (s, e) =>
 		{
+			Logger.Info("App", "Application suspending");
 			Cesium.StopAsync().Wait(TimeSpan.FromSeconds(3));
 		};
 	}
@@ -19,6 +25,8 @@ public partial class App : Application
 
 	protected override void OnLaunched(LaunchActivatedEventArgs args)
 	{
+		Logger.Debug("App", "OnLaunched called");
+
 		MainWindow = new Window();
 #if DEBUG
 		// MainWindow.UseStudio(); // Removed: 'Window' does not contain a definition for 'UseStudio'
@@ -46,11 +54,13 @@ public partial class App : Application
 			if (File.Exists(Util.ConfigPath) && Config.Load())
 			{
 				// Config loaded successfully, go to main page
+				Logger.Info("App", "Configuration loaded, navigating to LoadingPage");
 				_ = rootFrame.Navigate(typeof(LoadingPage), args.Arguments);
 			}
 			else
 			{
 				// No config or failed to load, show setup page
+				Logger.Info("App", "No configuration found, navigating to SetupPage");
 				_ = rootFrame.Navigate(typeof(SetupPage), args.Arguments);
 			}
 		}
@@ -66,6 +76,7 @@ public partial class App : Application
 	/// <param name="e">Details about the navigation failure</param>
 	private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
 	{
+		Logger.Error("App", $"Failed to load {e.SourcePageType.FullName}", e.Exception);
 		throw new InvalidOperationException($"Failed to load {e.SourcePageType.FullName}: {e.Exception}");
 	}
 
@@ -124,5 +135,6 @@ public partial class App : Application
 			LoadingPage.RaiseLoadingChanged("Creating temp directory...");
 		}
 		DownloadMgr.client.Timeout = new TimeSpan(0, 10, 0);
+		DownloadMgr.DownloadPlan("C:\\Users\\sriem\\Downloads\\test2.fgfp", 100);
 	}
 }

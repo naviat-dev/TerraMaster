@@ -15,7 +15,7 @@ public class Util
 	{
 		if (Math.Abs(lat) > 90 || Math.Abs(lon) > 180)
 		{
-			Console.WriteLine("Latitude or longitude out of range");
+			Logger.Warning("Util", $"Latitude or longitude out of range: lat={lat}, lon={lon}");
 			return 0;
 		}
 		else
@@ -80,7 +80,7 @@ public class Util
 
 		if (Math.Abs(lat) > 90 || Math.Abs(lon) > 180)
 		{
-			Console.WriteLine("Latitude or longitude out of range");
+			Logger.Warning("Util", $"Latitude or longitude out of range: lat={lat}, lon={lon}");
 		}
 		else
 		{

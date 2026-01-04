@@ -138,7 +138,11 @@ public sealed partial class SetupPage : Page
 		if (!Config.Save())
 		{
 			// Handle save error if needed
-			Console.WriteLine("Failed to save configuration");
+			Logger.Error("SetupPage", "Failed to save configuration");
+		}
+		else
+		{
+			Logger.Info("SetupPage", "Setup configuration saved successfully");
 		}
 	}
 }
