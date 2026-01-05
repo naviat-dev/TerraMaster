@@ -3,7 +3,13 @@ namespace TerraSDM;
 public class Util
 {
 	public static readonly double[,] LatitudeIndex = { { 89, 12 }, { 86, 4 }, { 83, 2 }, { 76, 1 }, { 62, 0.5 }, { 22, 0.25 }, { 0, 0.125 } };
-	public static readonly string SavePath = "C:\\Users\\User\\Documents\\Aviation\\scenery-test\\";
+	private static readonly string _defaultSavePath = "C:\\Users\\User\\Documents\\Aviation\\scenery-test\\";
+
+	/// <summary>
+	/// Gets the save path - uses Config.SavePath if available, otherwise falls back to default
+	/// </summary>
+	public static string SavePath => !string.IsNullOrEmpty(Config.SavePath) ? Config.SavePath + "\\" : _defaultSavePath;
+
 	public static readonly string TempPath = Path.GetTempPath() + "terrasdm";
 	public static readonly string StorePath = ApplicationData.Current.LocalFolder.Path;
 	public static readonly string ConfigPath = Path.Combine(StorePath, "config.json");

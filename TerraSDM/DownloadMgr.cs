@@ -127,7 +127,8 @@ public class DownloadMgr
 							{
 								Logger.Debug("DownloadMgr", $"Downloading {urlObj}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
-								try { await File.WriteAllBytesAsync(Ws2Dir + "/Terrain/" + subfolder + tokens[1] + ".gz", objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing object file", ex); }
+								string objPath = $"ws2/Terrain/{subfolder}{tokens[1]}.gz";
+								await StorageHelper.WriteSceneryBytesAsync(objPath, objectBytes);
 								_ = CurrentTasks.Remove(urlObj);
 							}
 						}
@@ -507,11 +508,6 @@ public class DownloadMgr
 					string[] tokens = line.Split(' ');
 					if (tokens[0] == "OBJECT_SHARED")
 					{
-						if (!Directory.Exists(Path.GetDirectoryName(Util.SavePath + "/" + tokens[1])))
-						{
-							_ = Directory.CreateDirectory(Path.GetDirectoryName(Util.SavePath + "/" + tokens[1]) ?? "");
-						}
-
 						string acFile;
 						string urlXml = Util.TerrServerUrl + "ws2/" + tokens[1];
 						if (CurrentTasks.Add(urlXml))
@@ -520,7 +516,7 @@ public class DownloadMgr
 							{
 								Logger.Debug("DownloadMgr", $"Downloading {urlXml}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
-								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + tokens[1], objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
+								await StorageHelper.WriteSceneryBytesAsync(tokens[1], objectBytes);
 								_ = CurrentTasks.Remove(urlXml);
 								string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
 								acFile = string.Concat((Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/"), "/", objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6));
@@ -534,7 +530,7 @@ public class DownloadMgr
 							{
 								Logger.Debug("DownloadMgr", $"Downloading {urlAc}");
 								byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
-								try { await File.WriteAllBytesAsync(Util.SavePath + "/" + acFile, modelBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
+								await StorageHelper.WriteSceneryBytesAsync(acFile, modelBytes);
 								_ = CurrentTasks.Remove(urlAc);
 								string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
 								foreach (string modelLine in modelFile)
@@ -546,7 +542,8 @@ public class DownloadMgr
 										{
 											Logger.Debug("DownloadMgr", $"Downloading {urlTex}");
 											byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
-											try { await File.WriteAllBytesAsync(Util.SavePath + "/" + (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", ""), textureBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
+											string texPath = (Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/") + "/" + modelLine[8..].Replace("\"", "");
+											await StorageHelper.WriteSceneryBytesAsync(texPath, textureBytes);
 											_ = CurrentTasks.Remove(urlTex);
 										}
 									}
