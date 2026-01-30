@@ -10,14 +10,14 @@ public class Index
 
 	public enum TileType
 	{
-		terrain,
-		objects,
-		ortho,
-		buildings,
-		details,
-		pylons,
-		roads,
-		trees
+		Terrain,
+		Objects,
+		Ortho,
+		Buildings,
+		Details,
+		Pylons,
+		Roads,
+		Trees
 	}
 
 	public enum DisplayType
@@ -90,13 +90,13 @@ public class Index
 					}
 					else if (tokens[0] == "OBJECT_SHARED")
 					{
-						isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
+						isUpToDate = isUpToDate && IsUrlUpToDate($"{Util.TerrServerUrl}ws2/{tokens[1]}");
 					}
 				}
 			}
 			tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
 			{
-				type = TileType.terrain,
+				type = TileType.Terrain,
 				latestVersion = isUpToDate,
 				url = url,
 				path = file
@@ -118,7 +118,7 @@ public class Index
 		{
 			string fileName = Path.GetFileName(file);
 			string[] objectLines = File.ReadAllLines(file);
-			string url = (Util.TerrServerUrl + "ws2/" + file.Replace(Util.SavePath, "")).Replace("\\", "/");
+			string url = $"{Util.TerrServerUrl}ws2/{file.Replace(Util.SavePath, "")}".Replace("\\", "/");
 			Console.WriteLine(url);
 			bool isUpToDate = true;
 			try
@@ -138,13 +138,13 @@ public class Index
 					}
 					else if (tokens[0] == "OBJECT_SHARED")
 					{
-						isUpToDate = isUpToDate && IsUrlUpToDate(Util.TerrServerUrl + "ws2/" + tokens[1]);
+						isUpToDate = isUpToDate && IsUrlUpToDate($"{Util.TerrServerUrl}ws2/{tokens[1]}");
 					}
 				}
 			}
 			tiles.Add(int.Parse(fileName.Split(".")[0]), new TileRecord
 			{
-				type = TileType.objects,
+				type = TileType.Objects,
 				latestVersion = isUpToDate,
 				url = url,
 				path = file
@@ -171,8 +171,8 @@ public class Index
 		string fileName = url.Replace(Util.TerrServerUrl, Util.SavePath).Replace("/", "\\");
 		if (!File.Exists(fileName))
 			return false;
-		string dirindexPath = Path.Combine(Util.TempPath, "sync", Path.GetDirectoryName(fileName).Replace(Util.SavePath, "").Replace("\\", "_") + ".dirindex");
-		if (!File.Exists(Util.TempPath + "/sync/" + fileName.Replace(Util.SavePath, "").Replace("\\", "_") + ".dirindex"))
+		string dirindexPath = Path.Combine(Util.TempPath, "sync", $"{Path.GetDirectoryName(fileName)?.Replace(Util.SavePath, "").Replace("\\", "_")}.dirindex");
+		if (!File.Exists($"{Util.TempPath}/sync/{fileName.Replace(Util.SavePath, "").Replace("\\", "_")}.dirindex"))
 		{
 			// Download the dirindex file to the temp folder
 			string dirindexUrl = url.Replace(fileName, ".dirindex");
@@ -219,11 +219,11 @@ public class Index
 		}
 		else if (type == DisplayType.blacklist)
 		{
-			categoryTiles = [.. tiles.Values.Where(t => t.type == TileType.terrain && !t.latestVersion)]; // Placeholder for blacklist
+			categoryTiles = [.. tiles.Values.Where(t => t.type == TileType.Terrain && !t.latestVersion)]; // Placeholder for blacklist
 		}
 		else if (type == DisplayType.selected)
 		{
-			categoryTiles = [.. tiles.Values.Where(t => t.type == TileType.terrain && !t.latestVersion)]; // Placeholder for selected
+			categoryTiles = [.. tiles.Values.Where(t => t.type == TileType.Terrain && !t.latestVersion)]; // Placeholder for selected
 		}
 		return new DisplayCategory
 		{

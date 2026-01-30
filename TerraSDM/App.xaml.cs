@@ -135,6 +135,5 @@ public partial class App : Application
 			LoadingPage.RaiseLoadingChanged("Creating temp directory...");
 		}
 		DownloadMgr.client.Timeout = new TimeSpan(0, 10, 0);
-		DownloadMgr.DownloadPlan("C:\\Users\\sriem\\Downloads\\test2.fgfp", 100);
 	}
 }

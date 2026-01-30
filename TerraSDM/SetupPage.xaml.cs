@@ -78,7 +78,7 @@ public sealed partial class SetupPage : Page
 			Storyboard slideOut = Ui.SlideOutAnimation("X", TimeSpan.FromSeconds(0.5), MainGrid, MainTransform);
 			slideOut.Completed += (s, args) =>
 			{
-				_ = ((Frame)Window.Current.Content).Navigate(typeof(LoadingPage));
+				_ = ((Frame?)Window.Current!.Content)!.Navigate(typeof(LoadingPage));
 			};
 			slideOut.Begin();
 		}
