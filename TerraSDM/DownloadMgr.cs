@@ -476,7 +476,11 @@ public class DownloadMgr
 					}
 				};
 
-				using FileStream fs = File.OpenWrite(Path.Combine(Util.SavePath, "Orthophotos", subfolder, $"{tile}.dds"));
+				using FileStream fs = File.OpenWrite(Util.SavePath + "Orthophotos/" + subfolder + tile + ".dds");
+				encoder.EncodeToStream(imageDDS, fs);
+
+				File.Delete(Path.Combine(Util.TempPath, tile + ".jpg"));
+				_ = CurrentTasks.Remove(urlPic);
 			}
 		}
 		catch (HttpRequestException ex)
