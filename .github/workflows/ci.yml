@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - release/**
+
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - release/**
+env:
+  STEP_TIMEOUT_MINUTES: 60
+
+jobs:
+  smoke_test:
+    name: Smoke Test (Debug Build of TerraSDM)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
+        uses: "./.github/steps/install_dependencies"
+
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.3.1
+
+      - name: Build TerraSDM (Debug)
+        shell: pwsh
+        run: msbuild ./TerraSDM/TerraSDM.csproj /r
+
+  build_windows:
+    name: Build Windows (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, x86, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
+        uses: "./.github/steps/install_dependencies"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.3.1
+
+      - name: Publish TerraSDM Windows ${{ matrix.arch }}
+        shell: pwsh
+        run: dotnet publish ./TerraSDM/TerraSDM.csproj -c Release -r win-${{ matrix.arch }} /p:PublishProfile=win-${{ matrix.arch }}
+
+      - name: Upload Windows ${{ matrix.arch }} Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerraSDM-windows-${{ matrix.arch }}
+          path: ./TerraSDM/bin/Release/net10.0-desktop/win-${{ matrix.arch }}/publish/
+
+  build_macos:
+    name: Build macOS (${{ matrix.arch }})
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
+        uses: "./.github/steps/install_dependencies"
+        with:
+          target-platform: 'macos'
+
+      - name: Publish TerraSDM macOS ${{ matrix.arch }}
+        shell: bash
+        run: dotnet publish ./TerraSDM/TerraSDM.csproj -c Release -r osx-${{ matrix.arch }} --self-contained
+
+      - name: Upload macOS ${{ matrix.arch }} Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerraSDM-macos-${{ matrix.arch }}
+          path: ./TerraSDM/bin/Release/net10.0-desktop/osx-${{ matrix.arch }}/publish/
+
+  build_linux:
+    name: Build Linux (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
+        uses: "./.github/steps/install_dependencies"
+        with:
+          target-platform: 'linux'
+
+      - name: Publish TerraSDM Linux ${{ matrix.arch }}
+        shell: bash
+        run: dotnet publish ./TerraSDM/TerraSDM.csproj -c Release -r linux-${{ matrix.arch }} --self-contained
+
+      - name: Upload Linux ${{ matrix.arch }} Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TerraSDM-linux-${{ matrix.arch }}
+          path: ./TerraSDM/bin/Release/net10.0-desktop/linux-${{ matrix.arch }}/publish/
