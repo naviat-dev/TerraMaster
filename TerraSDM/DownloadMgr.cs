@@ -80,14 +80,13 @@ public class DownloadMgr
 		if (version == "ws2")
 		{
 			string urlBtg = $"{Util.TerrServerUrl}{version}/Terrain/{subfolder}{tile}.btg.gz"; // Only used in WS2
-			string Ws2Dir = Path.Combine(Util.SavePath, "ws2");
 			if (CurrentTasks.Add(urlBtg))
 			{
 				try
 				{
 					Logger.Debug("DownloadMgr", $"Downloading {urlBtg}");
 					byte[] btgBytes = await client.GetByteArrayAsync(urlBtg);
-					string terrainDir = Path.Combine(Ws2Dir, "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar));
+					string terrainDir = Path.Combine(Util.SavePath, "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar));
 					if (!Directory.Exists(terrainDir))
 					{
 						_ = Directory.CreateDirectory(terrainDir);
@@ -109,7 +108,7 @@ public class DownloadMgr
 				{
 					Logger.Debug("DownloadMgr", $"Downloading {urlStg}");
 					byte[] stgBytes = await client.GetByteArrayAsync(urlStg);
-					string terrainDir = Path.Combine(Ws2Dir, "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar));
+					string terrainDir = Path.Combine(Util.SavePath, "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar));
 					if (!Directory.Exists(terrainDir))
 					{
 						_ = Directory.CreateDirectory(terrainDir);
@@ -130,7 +129,7 @@ public class DownloadMgr
 							{
 								Logger.Debug("DownloadMgr", $"Downloading {urlObj}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
-								string objPath = Path.Combine("ws2", "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar), $"{tokens[1]}.gz");
+								string objPath = Path.Combine(terrainDir, $"{tokens[1]}.gz");
 								await StorageHelper.WriteSceneryBytesAsync(objPath, objectBytes);
 								_ = CurrentTasks.Remove(urlObj);
 							}
@@ -198,14 +197,13 @@ public class DownloadMgr
 		else if (version == "ws3")
 		{
 			string urlVpb = $"{Util.TerrServerUrl}{version}/vpb/{subfolder[..^1]}.zip"; // Only used in WS3
-			string Ws3Dir = Path.Combine(Util.SavePath, "ws3");
 			if (CurrentTasks.Add(urlStg))
 			{
 				try
 				{
 					Logger.Debug("DownloadMgr", $"Downloading {urlStg}");
 					byte[] stgBytes = await client.GetByteArrayAsync(urlStg);
-					string terrainDir = Path.Combine(Ws3Dir, "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar));
+					string terrainDir = Path.Combine(Util.SavePath, "Terrain", subfolder.Replace("/", Path.DirectorySeparatorChar.ToString()).TrimEnd(Path.DirectorySeparatorChar));
 					if (!Directory.Exists(terrainDir))
 					{
 						_ = Directory.CreateDirectory(terrainDir);
@@ -226,7 +224,7 @@ public class DownloadMgr
 							{
 								Logger.Debug("DownloadMgr", $"Downloading {urlObj}");
 								byte[] objectBytes = await client.GetByteArrayAsync(urlObj);
-								try { await File.WriteAllBytesAsync(Path.Combine(Ws3Dir, "Terrain", subfolder, tokens[1] + ".gz"), objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
+								try { await File.WriteAllBytesAsync(Path.Combine(Util.SavePath, "Terrain", subfolder, tokens[1] + ".gz"), objectBytes); } catch (IOException ex) { Logger.Warning("DownloadMgr", "Race condition writing file", ex); }
 								_ = CurrentTasks.Remove(urlObj);
 							}
 						}
@@ -305,11 +303,11 @@ public class DownloadMgr
 							string vpbDir;
 							if (entryString.Length == 15 || entryString.EndsWith("added"))
 							{
-								vpbDir = $"{Ws3Dir}vpb/{subfolder}/";
+								vpbDir = $"{Util.SavePath}vpb/{subfolder}/";
 							}
 							else
 							{
-								vpbDir = $"{Ws3Dir}vpb/{subfolder}{entryString[..10]}_root_L0_X0_Y0/";
+								vpbDir = $"{Util.SavePath}vpb/{subfolder}{entryString[..10]}_root_L0_X0_Y0/";
 							}
 							if (!Directory.Exists(vpbDir))
 							{
@@ -332,8 +330,8 @@ public class DownloadMgr
 
 	private static async Task DownloadAirport(string code, string version)
 	{
-		string subfolder = $"{version}/Airports/{string.Join("/", code[..^1].ToCharArray())}";
-		string parent = $"{Util.TerrServerUrl}{subfolder}";
+		string subfolder = $"Airports/{string.Join("/", code[..^1].ToCharArray())}";
+		string parent = $"{Util.TerrServerUrl}ws3/{subfolder}";
 		try
 		{
 			HtmlDocument airportParentDir = new();
