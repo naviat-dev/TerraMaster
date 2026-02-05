@@ -45,7 +45,7 @@ body:
       placeholder: |
         # C# Example
         ```csharp
-        var thing = new MyNewControl();
+        MyNewControl thing = new ();
         thing.BeAwesome = true;
         thing.Color = Colors.Cornsilk;
         ```

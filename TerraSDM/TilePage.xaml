@@ -10,7 +10,9 @@
 			<ColumnDefinition Width="300"/>
 		</Grid.ColumnDefinitions>
 		<WebView2 x:Name="MyWebView"
-				  Grid.Column="0"/>
+				  Grid.Column="0"
+				  HorizontalAlignment="Stretch"
+				  VerticalAlignment="Stretch"/>
 		<Grid x:Name="TileControls"
 			  Grid.Column="1">
 			<Grid.RowDefinitions>

@@ -454,8 +454,8 @@ public class DownloadMgr
 					using (SKCanvas squareCanvas = new(squareBitmap))
 					{
 						// Stretch the stitched image to fill the entire square bitmap
-						var sourceRect = new SKRect(0, 0, stitched.Width, stitched.Height);
-						var destRect = new SKRect(0, 0, squareSize, squareSize);
+						SKRect sourceRect = new(0, 0, stitched.Width, stitched.Height);
+						SKRect destRect = new(0, 0, squareSize, squareSize);
 						squareCanvas.DrawBitmap(stitched, sourceRect, destRect);
 					}
 					using SKImage squareImage = SKImage.FromBitmap(squareBitmap);

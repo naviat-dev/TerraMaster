@@ -134,6 +134,12 @@ public partial class App : Application
 			_ = Directory.CreateDirectory(Util.TempPath);
 			LoadingPage.RaiseLoadingChanged("Creating temp directory...");
 		}
+		// Index.IndexAllTiles(false);
 		DownloadMgr.client.Timeout = new TimeSpan(0, 10, 0);
+		List<(double, double)> tiles = Util.GetTilesWithinRadius(-33.8688, 151.2093, 50); // Sydney
+		foreach ((double lat, double lon) in tiles)
+		{
+			// DownloadMgr.DownloadTile(lat, lon, 8192, "ws2");
+		}
 	}
 }

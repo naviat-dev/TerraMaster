@@ -13,4 +13,10 @@ public sealed partial class TilePage : Page
 			Logger.Debug("TilePage", $"[JS: {message}]");
 		};
 	}
+
+	private void WebViewHost_SizeChanged(object sender, SizeChangedEventArgs e)
+	{
+		MyWebView.Width = e.NewSize.Width;
+		MyWebView.Height = e.NewSize.Height;
+	}
 }

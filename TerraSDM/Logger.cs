@@ -17,7 +17,7 @@ public class FileLoggerProvider : ILoggerProvider
 		_logFilePath = logFilePath;
 
 		// Ensure directory exists
-		var directory = Path.GetDirectoryName(logFilePath);
+		string? directory = Path.GetDirectoryName(logFilePath);
 		if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
 		{
 			Directory.CreateDirectory(directory);
@@ -64,7 +64,7 @@ public class FileLogger : ILogger
 		if (!IsEnabled(logLevel))
 			return;
 
-		var logLevelString = logLevel switch
+		string logLevelString = logLevel switch
 		{
 			LogLevel.Debug => "DEBUG",
 			LogLevel.Information => "INFO ",
@@ -74,9 +74,9 @@ public class FileLogger : ILogger
 			_ => "     "
 		};
 
-		var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-		var message = formatter(state, exception);
-		var logEntry = $"[{timestamp}] [{logLevelString}] [{_categoryName}] {message}";
+		string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+		string message = formatter(state, exception);
+		string logEntry = $"[{timestamp}] [{logLevelString}] [{_categoryName}] {message}";
 
 		if (exception != null)
 		{

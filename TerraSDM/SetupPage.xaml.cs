@@ -40,7 +40,7 @@ public sealed partial class SetupPage : Page
 
 #if WINDOWS
         // Associate with current window for WinUI 3
-        var window = ((App)Application.Current).MainWindow;
+        App window = ((App)Application.Current).MainWindow;
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
         WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
 #endif

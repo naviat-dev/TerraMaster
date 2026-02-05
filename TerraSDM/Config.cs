@@ -83,7 +83,7 @@ public static class Config
 				return false;
 
 			string jsonString = File.ReadAllText(path);
-			var loadedData = JsonSerializer.Deserialize<ConfigData>(jsonString, _jsonOptions);
+			ConfigData? loadedData = JsonSerializer.Deserialize<ConfigData>(jsonString, _jsonOptions);
 
 			if (loadedData != null)
 			{

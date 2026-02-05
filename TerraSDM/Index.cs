@@ -236,7 +236,7 @@ public class Index
 	{
 		HashSet<int> neighbors = [];
 		neighbors.Add(tileId); // West
-		var (lat, lon) = Util.GetLatLon(tileId);
+		(double lat, double lon) = Util.GetLatLon(tileId);
 		double[,] tileBounds = Util.GetTileBounds(lat, lon);
 		int widthIntervals = (int)((tileBounds[0, 0] - tileBounds[0, 1]) / 0.125);
 		HashSet<int> nextTilesToCheck = [];
