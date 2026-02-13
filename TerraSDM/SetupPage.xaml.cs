@@ -1,4 +1,7 @@
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Animation;
+using System.IO;
+using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 
 namespace TerraSDM;
@@ -8,18 +11,24 @@ public sealed partial class SetupPage : Page
 	private static readonly string[] TitleText = [
 		"Welcome to TerraSDM",
 		"Where do you want to save your scenery?",
+		"Preparing shared models",
 		"Configure Cesium API",
 		"You're all set!"
 	];
 	private static readonly string[] BodyText = [
 		"Just a few more steps to get you started.",
 		"If you have scenery already downloaded, you can point TerraSDM to that location.",
+		"Downloading the shared models TerraSDM needs to render scenery objects.",
 		"Enter your Cesium Ion API access token to download terrain and imagery.",
 		"TerraSDM is ready to help you manage your scenery data."
 	];
+	private const int SharedModelsPageIndex = 2;
+	private const string SharedModelsReadyText = "Shared models downloaded. Continue when you're ready.";
 #pragma warning disable IDE0044 // Add readonly modifier
 	private int _currentPage = 0;
 	private StorageFolder? _selectedFolder;
+	private Task? _sharedModelsDownloadTask;
+	private bool _isDownloadingSharedModels;
 #pragma warning restore IDE0044 // Add readonly modifier
 	public SetupPage()
 	{
@@ -51,7 +60,9 @@ public sealed partial class SetupPage : Page
 		{
 			// Update UI to show selected path
 			selectedPathText.Text = _selectedFolder.Path;
-			startSetupButton.IsEnabled = true;
+			Config.SavePath = _selectedFolder.Path;
+			EnsureSharedModelDirectories();
+			UpdatePageVisibility();
 		}
 	}
 
@@ -63,7 +74,11 @@ public sealed partial class SetupPage : Page
 			// Show error or return
 			return;
 		}
-		if (_currentPage == 2 && string.IsNullOrWhiteSpace(cesiumTokenInput.Text))
+		if (_currentPage == SharedModelsPageIndex && _isDownloadingSharedModels)
+		{
+			return;
+		}
+		if (_currentPage == 3 && string.IsNullOrWhiteSpace(cesiumTokenInput.Text))
 		{
 			// Show error or allow skip
 			// For now, we'll allow continuing
@@ -90,6 +105,11 @@ public sealed partial class SetupPage : Page
 				setupTitle.Text = TitleText[_currentPage];
 				setupBody.Text = BodyText[_currentPage];
 				UpdatePageVisibility();
+
+				if (_currentPage == SharedModelsPageIndex && _sharedModelsDownloadTask == null)
+				{
+					StartSharedModelsDownload();
+				}
 				Storyboard slideIn = Ui.SlideInAnimation("X", TimeSpan.FromSeconds(0.5), MainGrid, MainTransform);
 				slideIn.Begin();
 			};
@@ -101,8 +121,21 @@ public sealed partial class SetupPage : Page
 	{
 		// Show/hide page-specific content
 		folderSelectionPanel.Visibility = _currentPage == 1 ? Visibility.Visible : Visibility.Collapsed;
-		apiTokenPanel.Visibility = _currentPage == 2 ? Visibility.Visible : Visibility.Collapsed;
-		summaryPanel.Visibility = _currentPage == 3 ? Visibility.Visible : Visibility.Collapsed;
+		sharedModelsPanel.Visibility = _currentPage == SharedModelsPageIndex ? Visibility.Visible : Visibility.Collapsed;
+		apiTokenPanel.Visibility = _currentPage == 3 ? Visibility.Visible : Visibility.Collapsed;
+		summaryPanel.Visibility = _currentPage == 4 ? Visibility.Visible : Visibility.Collapsed;
+
+		if (_currentPage == SharedModelsPageIndex)
+		{
+			setupBody.Text = _isDownloadingSharedModels ? BodyText[_currentPage] : SharedModelsReadyText;
+		}
+		else
+		{
+			setupBody.Text = BodyText[_currentPage];
+		}
+
+		sharedModelsProgress.Visibility = _currentPage == SharedModelsPageIndex && _isDownloadingSharedModels ? Visibility.Visible : Visibility.Collapsed;
+		sharedModelsProgress.IsActive = sharedModelsProgress.Visibility == Visibility.Visible;
 
 		// Update button text
 		if (_currentPage == TitleText.Length - 1)
@@ -115,11 +148,76 @@ public sealed partial class SetupPage : Page
 		}
 
 		// Update summary if on last page
-		if (_currentPage == 3)
+		if (_currentPage == 4)
 		{
 			summarySceneryPath.Text = _selectedFolder?.Path ?? "Not selected";
 			summaryApiToken.Text = string.IsNullOrWhiteSpace(cesiumTokenInput.Text) ? "Not configured" : "Configured";
 		}
+
+		bool canAdvance = true;
+		if (_currentPage == 1)
+		{
+			canAdvance = _selectedFolder != null;
+		}
+		else if (_currentPage == SharedModelsPageIndex)
+		{
+			canAdvance = !_isDownloadingSharedModels;
+		}
+		startSetupButton.IsEnabled = canAdvance;
+	}
+
+	private void EnsureSharedModelDirectories()
+	{
+		if (_selectedFolder == null)
+		{
+			return;
+		}
+
+		try
+		{
+			_ = Directory.CreateDirectory(Path.Combine(_selectedFolder.Path, "Models"));
+			_ = Directory.CreateDirectory(Util.TempPath);
+		}
+		catch (Exception ex)
+		{
+			Logger.Error("SetupPage", $"Failed to prepare shared model directories: {ex.Message}", ex);
+		}
+	}
+
+	private void StartSharedModelsDownload()
+	{
+		if (_selectedFolder == null)
+		{
+			return;
+		}
+		if (_sharedModelsDownloadTask != null && !_sharedModelsDownloadTask.IsCompleted)
+		{
+			return;
+		}
+
+		EnsureSharedModelDirectories();
+
+		_isDownloadingSharedModels = true;
+		UpdatePageVisibility();
+
+		_sharedModelsDownloadTask = DownloadMgr.DownloadSharedModels();
+		_ = _sharedModelsDownloadTask.ContinueWith(task =>
+		{
+			DispatcherQueue.TryEnqueue(() =>
+			{
+				_isDownloadingSharedModels = false;
+				UpdatePageVisibility();
+
+				if (task.IsFaulted)
+				{
+					Logger.Error("SetupPage", $"Shared models download failed: {task.Exception?.GetBaseException().Message}");
+				}
+				else
+				{
+					Logger.Info("SetupPage", "Shared models downloaded successfully");
+				}
+			});
+		}, TaskScheduler.Default);
 	}
 
 	private void SaveConfiguration()

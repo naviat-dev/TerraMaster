@@ -514,48 +514,8 @@ public class DownloadMgr
 					string[] tokens = line.Split(' ');
 					if (tokens[0] == "OBJECT_SHARED")
 					{
-						string acFile;
-						string urlXml = $"{Util.TerrServerUrl}ws2/{tokens[1]}";
-						if (CurrentTasks.Add(urlXml))
-						{
-							if (tokens[1].EndsWith(".xml"))
-							{
-								Logger.Debug("DownloadMgr", $"Downloading {urlXml}");
-								byte[] objectBytes = await client.GetByteArrayAsync(urlXml);
-								await StorageHelper.WriteSceneryBytesAsync(tokens[1], objectBytes);
-								_ = CurrentTasks.Remove(urlXml);
-								string objectFile = System.Text.Encoding.UTF8.GetString(objectBytes);
-								acFile = $"{(Path.GetDirectoryName(tokens[1]) ?? "").Replace("\\", "/")}/{objectFile.AsSpan(objectFile.IndexOf("<path>") + 6, objectFile.IndexOf("</path>") - objectFile.IndexOf("<path>") - 6)}";
-							}
-							else
-							{
-								acFile = tokens[1];
-							}
-							string urlAc = $"{Util.TerrServerUrl}ws2/{acFile}";
-							if (CurrentTasks.Add(urlAc))
-							{
-								Logger.Debug("DownloadMgr", $"Downloading {urlAc}");
-								byte[] modelBytes = await client.GetByteArrayAsync(urlAc);
-								await StorageHelper.WriteSceneryBytesAsync(acFile, modelBytes);
-								_ = CurrentTasks.Remove(urlAc);
-								string[] modelFile = System.Text.Encoding.UTF8.GetString(modelBytes).Split(["\r\n", "\n"], StringSplitOptions.None);
-								foreach (string modelLine in modelFile)
-								{
-									if (modelLine.StartsWith("texture "))
-									{
-										string urlTex = $"{Util.TerrServerUrl}ws2/{(Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/")}/{modelLine[8..].Replace("\"", "")}";
-										if (CurrentTasks.Add(urlTex))
-										{
-											Logger.Debug("DownloadMgr", $"Downloading {urlTex}");
-											byte[] textureBytes = await client.GetByteArrayAsync(urlTex);
-											string texPath = Path.Combine((Path.GetDirectoryName(acFile) ?? "").Replace("\\", "/"), modelLine[8..].Replace("\"", ""));
-											await StorageHelper.WriteSceneryBytesAsync(texPath, textureBytes);
-											_ = CurrentTasks.Remove(urlTex);
-										}
-									}
-								}
-							}
-						}
+						// These files are now downloaded on app initialization.
+						continue;
 					}
 					else if (tokens[0] == "OBJECT_STATIC")
 					{
@@ -818,6 +778,28 @@ public class DownloadMgr
 			}
 			_ = CurrentTasks.Remove(urlTrees);
 		}
+	}
+
+	public static async Task DownloadSharedModels()
+	{
+		byte[] sharedModelBytes = await client.GetByteArrayAsync("https://us1mirror.flightgear.org/terrasync/SharedModels.txz");
+		File.WriteAllBytes(Path.Combine(Util.TempPath, "SharedModels.txz"), sharedModelBytes);
+		using FileStream xzStream = File.OpenRead(Path.Combine(Util.TempPath, "SharedModels.txz"));
+		using var reader = ReaderFactory.Open(xzStream);
+		while (reader.MoveToNextEntry())
+		{
+			Console.WriteLine(reader.Entry.ToString());
+			if (!reader.Entry.IsDirectory)
+			{
+				if (!Directory.Exists(Path.GetDirectoryName(Path.Combine(Util.SavePath, reader.Entry.ToString() ?? ""))))
+				{
+					_ = Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(Util.SavePath, reader.Entry.ToString() ?? "")) ?? "");
+				}
+				using FileStream tarFileStream = File.Create(Path.Combine(Util.SavePath, reader.Entry.ToString() ?? ""));
+				reader.WriteEntryTo(tarFileStream);
+			}
+		}
+		File.Delete(Path.Combine(Util.TempPath, "SharedModels.txz"));
 	}
 
 	public static async Task DownloadPlan(string filepath, int radius)
