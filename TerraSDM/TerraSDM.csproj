@@ -16,6 +16,8 @@
 		<ApplicationPublisher>TerraSDM</ApplicationPublisher>
 		<!-- Package Description -->
 		<Description>TerraSDM powered by Uno Platform.</Description>
+		<!-- Application Icon -->
+		<ApplicationIcon>Assets\logo.ico</ApplicationIcon>
 
 		<!--
       UnoFeatures let's you quickly add and manage implicit package references based on the features you
